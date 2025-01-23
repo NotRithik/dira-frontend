@@ -53,13 +53,13 @@ export function DiraProvider({ children }: { children: React.ReactNode }) {
       const locked = await cosmWasmClient.queryContractSmart(contractAddress, {
         query_locked_collateral: { wallet_address_to_query: address },
       });
-      setLockedCollateral(new Decimal(locked.collateral_locked).div(1e6).toNumber());
+      setLockedCollateral(new Decimal(locked.collateral_locked).toNumber()); // Removed .div(1e6)
 
       // 3. Minted Dira
       const minted = await cosmWasmClient.queryContractSmart(contractAddress, {
         query_minted_dira: { wallet_address_to_query: address },
       });
-      setMintedDira(new Decimal(minted.dira_minted).div(1e6).toNumber());
+      setMintedDira(new Decimal(minted.dira_minted).toNumber()); // Removed .div(1e6)
 
       // 4. Liquidation health
       const liqHealth = await cosmWasmClient.queryContractSmart(contractAddress, {
@@ -118,7 +118,7 @@ export function DiraProvider({ children }: { children: React.ReactNode }) {
         funds
       );
       console.log('Transaction result:', result);
-      await fetchData(); // Refresh state after transaction
+      await fetchData();
       toast.success('Transaction successful!');
     } catch (error) {
       console.error('Error executing contract:', error);
@@ -134,7 +134,7 @@ export function DiraProvider({ children }: { children: React.ReactNode }) {
     const funds = [
       {
         denom: collateralDenom,
-        amount: new Decimal(amount).mul(1e6).toString(),
+        amount: new Decimal(amount).toString(), // Removed .mul(1e6)
       },
     ];
     executeContract(message, funds);
@@ -144,7 +144,7 @@ export function DiraProvider({ children }: { children: React.ReactNode }) {
   const unlockCollateral = async (amount: number) => {
     const message: ExecuteMsg = {
       unlock_collateral: {
-        collateral_amount_to_unlock: new Decimal(amount).mul(1e6).toString(),
+        collateral_amount_to_unlock: new Decimal(amount).toString(), // Already corrected - Removed .mul(1e6)
       },
     };
     executeContract(message);
@@ -154,7 +154,7 @@ export function DiraProvider({ children }: { children: React.ReactNode }) {
   const mintDira = async (amount: number) => {
     const message: ExecuteMsg = {
       mint_dira: {
-        dira_to_mint: new Decimal(amount).mul(1e6).toString(),
+        dira_to_mint: new Decimal(amount).toString(), // Removed .mul(1e6)
       },
     };
     executeContract(message);
@@ -165,14 +165,14 @@ export function DiraProvider({ children }: { children: React.ReactNode }) {
     const increaseAllowanceMsg = {
       increase_allowance: {
         spender: contractAddress,
-        amount: new Decimal(amount).mul(1e6).toString(),
+        amount: new Decimal(amount).mul(1e6).toString(), // Removed .mul(1e6)
         expires: { never: {} },
       },
     };
 
     const burnDiraMsg: ExecuteMsg = {
       burn_dira: {
-        dira_to_burn: new Decimal(amount).mul(1e6).toString(),
+        dira_to_burn: new Decimal(amount).mul(1e6).toString(), // Removed .mul(1e6)
       },
     };
 
@@ -185,27 +185,27 @@ export function DiraProvider({ children }: { children: React.ReactNode }) {
 
       // Increase allowance
       const allowanceFee = {
-        amount: [{ amount: '5000', denom: testnetDenom }],
-        gas: '200000',
+        amount: [{ amount: '5000', denom: testnetDenom }], // Keep fee amount same
+        gas: '300000', // INCREASE gas limit for allowance
       };
       const allowanceResult = await signingClient.execute(
         address!,
         cw20ContractAddress,
         increaseAllowanceMsg,
-        allowanceFee
+        allowanceFee,
       );
       console.log('Allowance transaction result:', allowanceResult);
 
       // Then burn
       const burnFee = {
         amount: [{ amount: '5000', denom: testnetDenom }],
-        gas: '500000',
-      };
+        gas: '600000', // INCREASE gas limit for burn
+      }; // INCREASE gas limit for burn
       const burnResult = await signingClient.execute(
         address!,
         contractAddress,
         burnDiraMsg,
-        burnFee
+        burnFee,
       );
       console.log('Burn transaction result:', burnResult);
 

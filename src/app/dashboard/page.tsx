@@ -11,6 +11,11 @@ export default function Dashboard() {
   const { lockedCollateral, mintedDira, currentOmPrice } = useDira()
   const { isConnected, address, disconnectWallet } = useWallet()
 
+  useEffect(() => {
+    console.log("Dashboard: typeof lockedCollateral:", typeof lockedCollateral); // Log type
+    console.log("Dashboard: Data from useDira context:", { lockedCollateral, mintedDira, currentOmPrice }); // Log data
+  }, [lockedCollateral, mintedDira, currentOmPrice]);
+
   // The user’s locked collateral (OM) value in AED
   const collateralValueInAED = lockedCollateral * currentOmPrice
 
