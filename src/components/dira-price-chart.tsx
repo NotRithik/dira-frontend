@@ -1,7 +1,7 @@
 'use client'
 
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 // Generate constant data for Dira price (always 1 AED)
 const diraPriceData = Array.from({ length: 15 }, (_, i) => ({
@@ -73,4 +73,3 @@ export function DiraPriceChart() {
     </Card>
   )
 }
-

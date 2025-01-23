@@ -1,112 +1,170 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Slider } from '@/components/ui/slider'
+import { debounce } from 'lodash'; // Import lodash debounce
 import { OmPriceChart } from '@/components/om-price-chart'
 import { useDira } from '@/context/DiraContext'
-import { useWallet } from '@/context/WalletContext'
 
-export default function Dashboard() {
-  const { lockedCollateral, mintedDira, currentOmPrice } = useDira()
-  const { isConnected, address, disconnectWallet } = useWallet()
+export default function ManageCollateral() {
+  const {
+    lockedCollateral,
+    mintedDira,
+    currentOmPrice,
+    mintableHealth,
+    lockCollateral,
+    unlockCollateral,
+  } = useDira()
+
+  const [lockAmount, setLockAmount] = useState<string>('')
+  const [unlockAmount, setUnlockAmount] = useState<string>('')
+  const [unlockPercentage, setUnlockPercentage] = useState(0)
+
+  // Instead of using hard-coded 0.8, we use `mintableHealth` to figure out
+  // the minimum collateral needed to back mintedDira. The max unlockable is
+  // anything above that threshold.
+  const minCollateralNeeded = mintedDira > 0
+    ? (mintedDira / currentOmPrice) / mintableHealth
+    : 0
+
+  const maxUnlockAmount = Math.max(0, lockedCollateral - minCollateralNeeded)
+
+  // Debounced state setter for unlockPercentage
+  const debouncedSetUnlockPercentage = useRef(
+    debounce((value) => {
+      setUnlockPercentage(value);
+    }, 150) // 150ms debounce delay
+  ).current;
 
   useEffect(() => {
-    console.log("Dashboard: typeof lockedCollateral:", typeof lockedCollateral); // Log type
-    console.log("Dashboard: Data from useDira context:", { lockedCollateral, mintedDira, currentOmPrice }); // Log data
-  }, [lockedCollateral, mintedDira, currentOmPrice]);
-
-  // The user’s locked collateral (OM) value in AED
-  const collateralValueInAED = lockedCollateral * currentOmPrice
-
-  // The ratio of how “healthy” your minted Dira is (collateral ratio)
-  const loanHealthValue = mintedDira > 0 ? (collateralValueInAED / mintedDira) * 100 : 0
-
-  const walletRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (window.location.hash === '#wallet' && walletRef.current) {
-      walletRef.current.scrollIntoView({ behavior: 'smooth' })
+    if (maxUnlockAmount > 0) {
+      setUnlockAmount(((unlockPercentage / 100) * maxUnlockAmount).toFixed(2))
+    } else {
+      setUnlockAmount('0');
     }
-  }, [])
+  }, [unlockPercentage, maxUnlockAmount])
+
+  const handleLock = (e: React.FormEvent) => {
+    e.preventDefault()
+    const amount = parseFloat(lockAmount)
+    if (!isNaN(amount) && amount > 0) {
+      lockCollateral(amount)
+      setLockAmount('')
+    }
+  }
+
+  const handleUnlock = (e: React.FormEvent) => {
+    e.preventDefault()
+    const amount = parseFloat(unlockAmount)
+    if (!isNaN(amount) && amount > 0 && amount <= maxUnlockAmount) {
+      unlockCollateral(amount)
+      setUnlockAmount('')
+      setUnlockPercentage(0)
+    }
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl mb-8">
         <Card className="bg-gray-800 text-white">
           <CardHeader>
-            <CardTitle>Locked Collateral</CardTitle>
-            <CardDescription>Your locked OM</CardDescription>
+            <CardTitle>Lock Collateral</CardTitle>
+            <CardDescription>Lock your OM to mint Dira</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-4xl font-bold">{lockedCollateral.toFixed(2)} OM</p>
-            <p className="text-gray-400">≈ {collateralValueInAED.toFixed(2)} AED</p>
+            <form onSubmit={handleLock}>
+              <div className="mb-4">
+                <label htmlFor="lockAmount" className="block text-sm font-medium text-gray-400 mb-2">
+                  Amount of OM to lock
+                </label>
+                <Input
+                  id="lockAmount"
+                  type="number"
+                  placeholder="Enter amount"
+                  value={lockAmount}
+                  onChange={(e) => setLockAmount(e.target.value)}
+                  className="w-full bg-gray-700 text-white"
+                  required
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+              <Button
+                type="submit"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+              >
+                Lock Collateral
+              </Button>
+            </form>
           </CardContent>
         </Card>
         <Card className="bg-gray-800 text-white">
           <CardHeader>
-            <CardTitle>Minted Dira</CardTitle>
-            <CardDescription>Your minted stablecoins</CardDescription>
+            <CardTitle>Unlock Collateral</CardTitle>
+            <CardDescription>Unlock your OM</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-4xl font-bold">{mintedDira.toFixed(2)} Dira</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-gray-800 text-white md:col-span-2">
-          <CardHeader>
-            <CardTitle>Stablecoin Health</CardTitle>
-            <CardDescription>Collateralization ratio</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-4xl font-bold">{loanHealthValue.toFixed(2)}%</p>
-            <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
-              <div
-                className={`h-2.5 rounded-full ${
-                  loanHealthValue >= 200 ? 'bg-green-600' :
-                  loanHealthValue >= 150 ? 'bg-yellow-400' :
-                  'bg-red-600'
-                }`}
-                style={{ width: `${Math.min(loanHealthValue, 100)}%` }}
-              ></div>
-            </div>
-            <p className="text-gray-400 mt-2">
-              {loanHealthValue >= 200 ? "Very Healthy" :
-               loanHealthValue >= 150 ? "Healthy" :
-               "At risk"}
-            </p>
+            <form onSubmit={handleUnlock}>
+              <div className="mb-4">
+                <label htmlFor="unlockAmount" className="block text-sm font-medium text-gray-400 mb-2">
+                  Amount of OM to unlock
+                </label>
+                <Input
+                  id="unlockAmount"
+                  type="number"
+                  placeholder="Enter amount"
+                  value={unlockAmount}
+                  onChange={(e) => {
+                    const val = e.target.value
+                    setUnlockAmount(val)
+                    const numVal = parseFloat(val)
+                    if (!isNaN(numVal) && maxUnlockAmount > 0) {
+                      setUnlockPercentage((numVal / maxUnlockAmount) * 100)
+                    } else {
+                      setUnlockPercentage(0)
+                    }
+                  }}
+                  className="w-full bg-gray-700 text-white"
+                  required
+                  min="0"
+                  max={maxUnlockAmount}
+                  step="0.01"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-400 mb-2">
+                  Percentage to unlock
+                </label>
+                <Slider
+                  value={[unlockPercentage]} // Use debounced function
+                  onValueChange={(value) => setUnlockPercentage(value[0])}
+                  max={100}
+                  step={1}
+                />
+                <span className="text-sm text-gray-400">{unlockPercentage.toFixed(2)}%</span>
+              </div>
+              <p className="text-sm text-gray-400 mb-4">
+                Locked collateral: {lockedCollateral.toFixed(2)} OM
+              </p>
+              <p className="text-sm text-gray-400 mb-4">
+                Maximum unlockable: {maxUnlockAmount.toFixed(2)} OM
+              </p>
+              <Button
+                type="submit"
+                className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                disabled={parseFloat(unlockAmount) > maxUnlockAmount}
+              >
+                Unlock Collateral
+              </Button>
+            </form>
           </CardContent>
         </Card>
       </div>
-      <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="w-full max-w-4xl">
         <OmPriceChart />
-        <Card className="bg-gray-800 text-white" ref={walletRef}>
-          <CardHeader>
-            <CardTitle>Wallet Management</CardTitle>
-            <CardDescription>Your connected wallet</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center">
-            {isConnected ? (
-              <>
-                <p className="mb-2 text-center">Connected Address:</p>
-                <p className="text-sm mb-4 break-all text-center">
-                  {address ? address : 'Unknown'}
-                </p>
-                <Button
-                  onClick={disconnectWallet}
-                  className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded w-full max-w-xs"
-                >
-                  Disconnect Wallet
-                </Button>
-                <div className="w-full h-1 bg-gray-700 my-4"></div>
-                <p className="text-sm text-gray-400 text-center">
-                  Connected to the Mantra Chain (testnet)
-                </p>
-              </>
-            ) : (
-              <p className="text-center">No wallet connected</p>
-            )}
-          </CardContent>
-        </Card>
       </div>
     </div>
   )

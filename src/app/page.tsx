@@ -35,10 +35,10 @@ export default function Home() {
 
         <div className="text-right mb-16">
           <h2 className="ml-auto w-2/3 text-3xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">
-            Dubai&apos;s Financial Frontier
+            Dubai's Financial Frontier
           </h2>
           <p className="ml-auto w-2/3 text-xl">
-            The RWA market is booming. Dubai needs liquidity. We&apos;re building the bridge. How would you like to join us?
+            The RWA market is booming. Dubai needs liquidity. We're building the bridge. How would you like to join us?
           </p>
         </div>
 
