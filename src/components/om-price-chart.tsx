@@ -2,21 +2,24 @@
 
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { atomPriceData } from "@/utils/atomPriceData"
+import { omPriceData } from "@/utils/omPriceData"
 import { useDira } from "@/context/DiraContext"
 
-export function AtomPriceChart() {
-  const { currentAtomPrice } = useDira()
+export function OmPriceChart() {
+  const { currentOmPrice } = useDira()
 
-  const formattedData = atomPriceData.map(item => ({
+  // The data is still hardcoded for historical OM price, but we multiply each
+  // entry by 3.67 to simulate an AED conversion. The actual price of the last
+  // point is fetched from the contract and displayed in other UI places.
+  const formattedData = omPriceData.map((item) => ({
     ...item,
-    price: item.price * 3.67 // Convert to AED
+    price: item.price * 3.67,
   }))
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>ATOM</CardTitle>
+        <CardTitle>OM</CardTitle>
         <CardDescription>Price history (AED)</CardDescription>
       </CardHeader>
       <CardContent className="pb-4">
@@ -50,7 +53,7 @@ export function AtomPriceChart() {
                               Price
                             </span>
                             <span className="font-bold">
-                              {payload[0].value?.toFixed(2)} AED
+                              {payload[0].value} AED
                             </span>
                           </div>
                         </div>
@@ -67,7 +70,7 @@ export function AtomPriceChart() {
                 strokeWidth={2}
                 dot={false}
               />
-              <XAxis dataKey="date" display="none" />
+              <XAxis dataKey="date" hide />
               <YAxis />
             </LineChart>
           </ResponsiveContainer>
@@ -76,4 +79,3 @@ export function AtomPriceChart() {
     </Card>
   )
 }
-

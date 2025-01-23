@@ -26,7 +26,7 @@ const mantraChainInfo: ChainInfo = {
   chainId: process.env.NEXT_PUBLIC_MANTRA_CHAIN_ID!,
   chainName: process.env.NEXT_PUBLIC_MANTRA_TESTNET_NAME!,
   rpc: process.env.NEXT_PUBLIC_MANTRA_RPC_ENDPOINT!,
-  rest: 'https://lcd.dukong.mantrachain.io', //  REST endpoint for Dukong
+  rest: 'https://api.dukong.mantrachain.io', //  REST endpoint for Dukong
   bip44: {
     coinType: 118, // ATOM coin type (can use 60 for OM if needed)
   },
@@ -43,7 +43,7 @@ const mantraChainInfo: ChainInfo = {
       coinDenom: 'OM', // Display Denom
       coinMinimalDenom: process.env.NEXT_PUBLIC_DENOM!, // Denom used in transactions
       coinDecimals: 6, // Decimals of OM
-      coinGeckoId: 'mantra-dao', // If you want to fetch price from CoinGecko
+      coinGeckoId: 'mantra-dao',
     },
   ],
   feeCurrencies: [
@@ -51,16 +51,18 @@ const mantraChainInfo: ChainInfo = {
       coinDenom: 'OM',
       coinMinimalDenom: process.env.NEXT_PUBLIC_DENOM!,
       coinDecimals: 6,
+      coinGeckoId: 'mantra-dao',
       gasPriceStep: {
         low: 0.01,
         average: 0.025,
-        high: 0.04,
+        high: 0.03,
       },
     },
   ],
   stakeCurrency: {
     coinDenom: 'OM',
     coinMinimalDenom: process.env.NEXT_PUBLIC_DENOM!,
+    coinGeckoId: 'mantra-dao',
     coinDecimals: 6,
   },
 };
@@ -84,6 +86,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         offlineSigner
       );
       return signingClient;
+
+
     } catch (error) {
       console.error('Error getting signing client:', error);
       toast.error('Failed to get signing client.');

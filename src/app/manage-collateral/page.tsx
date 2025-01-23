@@ -5,21 +5,38 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Slider } from '@/components/ui/slider'
-import { AtomPriceChart } from '@/components/atom-price-chart'
+import { OmPriceChart } from '@/components/om-price-chart'
 import { useDira } from '@/context/DiraContext'
 
 export default function ManageCollateral() {
-  const { lockedCollateral, mintedDira, currentAtomPrice, lockCollateral, unlockCollateral } = useDira()
+  const {
+    lockedCollateral,
+    mintedDira,
+    currentOmPrice,
+    mintableHealth,
+    lockCollateral,
+    unlockCollateral,
+  } = useDira()
+
   const [lockAmount, setLockAmount] = useState<string>('')
   const [unlockAmount, setUnlockAmount] = useState<string>('')
   const [unlockPercentage, setUnlockPercentage] = useState(0)
 
-  const maxUnlockAmount = mintedDira > 0
-    ? Math.max(0, lockedCollateral - (mintedDira / currentAtomPrice / 0.8))
-    : lockedCollateral
+  // Instead of using hard-coded 0.8, we use `mintableHealth` to figure out
+  // the minimum collateral needed to back mintedDira. The max unlockable is
+  // anything above that threshold.
+  const minCollateralNeeded = mintedDira > 0
+    ? (mintedDira / currentOmPrice) / mintableHealth
+    : 0
+
+  const maxUnlockAmount = Math.max(0, lockedCollateral - minCollateralNeeded)
 
   useEffect(() => {
-    setUnlockAmount((unlockPercentage / 100 * maxUnlockAmount).toFixed(2))
+    if (maxUnlockAmount > 0) {
+      setUnlockAmount(((unlockPercentage / 100) * maxUnlockAmount).toFixed(2))
+    } else {
+      setUnlockAmount('0')
+    }
   }, [unlockPercentage, maxUnlockAmount])
 
   const handleLock = (e: React.FormEvent) => {
@@ -47,13 +64,13 @@ export default function ManageCollateral() {
         <Card className="bg-gray-800 text-white">
           <CardHeader>
             <CardTitle>Lock Collateral</CardTitle>
-            <CardDescription>Lock your ATOM to mint Dira</CardDescription>
+            <CardDescription>Lock your OM to mint Dira</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLock}>
               <div className="mb-4">
                 <label htmlFor="lockAmount" className="block text-sm font-medium text-gray-400 mb-2">
-                  Amount of ATOM to lock
+                  Amount of OM to lock
                 </label>
                 <Input
                   id="lockAmount"
@@ -67,8 +84,8 @@ export default function ManageCollateral() {
                   step="0.01"
                 />
               </div>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
               >
                 Lock Collateral
@@ -79,13 +96,13 @@ export default function ManageCollateral() {
         <Card className="bg-gray-800 text-white">
           <CardHeader>
             <CardTitle>Unlock Collateral</CardTitle>
-            <CardDescription>Unlock your ATOM</CardDescription>
+            <CardDescription>Unlock your OM</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleUnlock}>
               <div className="mb-4">
                 <label htmlFor="unlockAmount" className="block text-sm font-medium text-gray-400 mb-2">
-                  Amount of ATOM to unlock
+                  Amount of OM to unlock
                 </label>
                 <Input
                   id="unlockAmount"
@@ -93,10 +110,14 @@ export default function ManageCollateral() {
                   placeholder="Enter amount"
                   value={unlockAmount}
                   onChange={(e) => {
-                    const value = e.target.value
-                    setUnlockAmount(value)
-                    const numValue = parseFloat(value)
-                    setUnlockPercentage(isNaN(numValue) ? 0 : (numValue / maxUnlockAmount) * 100)
+                    const val = e.target.value
+                    setUnlockAmount(val)
+                    const numVal = parseFloat(val)
+                    if (!isNaN(numVal) && maxUnlockAmount > 0) {
+                      setUnlockPercentage((numVal / maxUnlockAmount) * 100)
+                    } else {
+                      setUnlockPercentage(0)
+                    }
                   }}
                   className="w-full bg-gray-700 text-white"
                   required
@@ -118,13 +139,13 @@ export default function ManageCollateral() {
                 <span className="text-sm text-gray-400">{unlockPercentage.toFixed(2)}%</span>
               </div>
               <p className="text-sm text-gray-400 mb-4">
-                Locked collateral: {lockedCollateral.toFixed(2)} ATOM
+                Locked collateral: {lockedCollateral.toFixed(2)} OM
               </p>
               <p className="text-sm text-gray-400 mb-4">
-                Maximum unlockable: {maxUnlockAmount.toFixed(2)} ATOM
+                Maximum unlockable: {maxUnlockAmount.toFixed(2)} OM
               </p>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
                 disabled={parseFloat(unlockAmount) > maxUnlockAmount}
               >
@@ -135,9 +156,8 @@ export default function ManageCollateral() {
         </Card>
       </div>
       <div className="w-full max-w-4xl">
-        <AtomPriceChart />
+        <OmPriceChart />
       </div>
     </div>
   )
 }
-

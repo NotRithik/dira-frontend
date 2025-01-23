@@ -5,23 +5,37 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Slider } from '@/components/ui/slider'
-import { AtomPriceChart } from '@/components/atom-price-chart'
+import { OmPriceChart } from '@/components/om-price-chart'
 import { useDira } from '@/context/DiraContext'
 
 export default function ManageDira() {
-  const { lockedCollateral, mintedDira, currentAtomPrice, mintDira, returnDira } = useDira()
+  const {
+    lockedCollateral,
+    mintedDira,
+    currentOmPrice,
+    mintableHealth,
+    mintDira,
+    returnDira,
+  } = useDira()
+
   const [mintAmount, setMintAmount] = useState<string>('')
   const [returnAmount, setReturnAmount] = useState<string>('')
   const [mintPercentage, setMintPercentage] = useState(0)
   const [returnPercentage, setReturnPercentage] = useState(0)
-  const maxMintAmount = (lockedCollateral * currentAtomPrice * 0.8) - mintedDira
+
+  // Replace 0.8 with `mintableHealth`.
+  const maxMintAmount = (lockedCollateral * currentOmPrice * mintableHealth) - mintedDira
 
   useEffect(() => {
-    setMintAmount((mintPercentage / 100 * maxMintAmount).toFixed(2))
+    if (maxMintAmount > 0) {
+      setMintAmount(((mintPercentage / 100) * maxMintAmount).toFixed(2))
+    } else {
+      setMintAmount('0')
+    }
   }, [mintPercentage, maxMintAmount])
 
   useEffect(() => {
-    setReturnAmount((returnPercentage / 100 * mintedDira).toFixed(2))
+    setReturnAmount(((returnPercentage / 100) * mintedDira).toFixed(2))
   }, [returnPercentage, mintedDira])
 
   const handleMint = (e: React.FormEvent) => {
@@ -56,7 +70,7 @@ export default function ManageDira() {
         <Card className="bg-gray-800 text-white">
           <CardHeader>
             <CardTitle>Mint Dira</CardTitle>
-            <CardDescription>Mint Dira based on your locked collateral</CardDescription>
+            <CardDescription>Mint Dira based on your locked OM</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleMint}>
@@ -73,7 +87,11 @@ export default function ManageDira() {
                     const value = e.target.value
                     setMintAmount(value)
                     const numValue = parseFloat(value)
-                    setMintPercentage(isNaN(numValue) ? 0 : (numValue / maxMintAmount) * 100)
+                    if (!isNaN(numValue) && maxMintAmount > 0) {
+                      setMintPercentage((numValue / maxMintAmount) * 100)
+                    } else {
+                      setMintPercentage(0)
+                    }
                   }}
                   className="w-full bg-gray-700 text-white"
                   required
@@ -96,10 +114,10 @@ export default function ManageDira() {
                 <span className="text-sm text-gray-400">{mintPercentage.toFixed(2)}%</span>
               </div>
               <p className="text-sm text-gray-400 mb-4">
-                Max mintable Dira: {maxMintAmount.toFixed(2)}
+                Max mintable Dira: {maxMintAmount > 0 ? maxMintAmount.toFixed(2) : '0'}
               </p>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded"
               >
                 Mint Dira
@@ -127,7 +145,11 @@ export default function ManageDira() {
                     const value = e.target.value
                     setReturnAmount(value)
                     const numValue = parseFloat(value)
-                    setReturnPercentage(isNaN(numValue) ? 0 : (numValue / mintedDira) * 100)
+                    if (!isNaN(numValue) && mintedDira > 0) {
+                      setReturnPercentage((numValue / mintedDira) * 100)
+                    } else {
+                      setReturnPercentage(0)
+                    }
                   }}
                   className="w-full bg-gray-700 text-white"
                   required
@@ -152,8 +174,8 @@ export default function ManageDira() {
               <p className="text-sm text-gray-400 mb-4">
                 Minted Dira: {mintedDira.toFixed(2)}
               </p>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
               >
                 Return Dira
@@ -163,9 +185,8 @@ export default function ManageDira() {
         </Card>
       </div>
       <div className="w-full max-w-4xl">
-        <AtomPriceChart />
+        <OmPriceChart />
       </div>
     </div>
   )
 }
-

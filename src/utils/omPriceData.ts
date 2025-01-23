@@ -1,4 +1,4 @@
-export const atomPriceData = [
+export const omPriceData = [
   { date: '2023-01-01', price: 9.5 },
   { date: '2023-01-02', price: 10.2 },
   { date: '2023-01-03', price: 11.8 },
@@ -15,8 +15,3 @@ export const atomPriceData = [
   { date: '2023-01-14', price: 15.3 },
   { date: '2023-01-15', price: 17.2 },
 ];
-
-export const getCurrentAtomPrice = (): number => {
-  return atomPriceData[atomPriceData.length - 1].price;
-};
-

@@ -47,7 +47,7 @@ export function DiraPriceChart() {
                               Price
                             </span>
                             <span className="font-bold">
-                              {payload[0].value?.toFixed(2)} AED
+                              {payload[0].value} AED
                             </span>
                           </div>
                         </div>

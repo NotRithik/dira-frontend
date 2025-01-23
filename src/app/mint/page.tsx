@@ -1,16 +1,18 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { AtomPriceChart } from '@/components/atom-price-chart'
+import { OmPriceChart } from '@/components/om-price-chart'
 import { useDira } from '@/context/DiraContext'
 
 export default function MintDira() {
-  const { lockedCollateral, mintedDira, currentAtomPrice, mintDira } = useDira()
+  const { lockedCollateral, mintedDira, currentOmPrice, mintableHealth, mintDira } = useDira()
   const [mintAmount, setMintAmount] = useState('')
-  const maxMintAmount = (lockedCollateral * currentAtomPrice * 0.8) - mintedDira
+
+  // Replacing the 0.8 factor with `mintableHealth`
+  const maxMintAmount = (lockedCollateral * currentOmPrice * mintableHealth) - mintedDira
 
   const handleMint = (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,19 +28,21 @@ export default function MintDira() {
       <Card className="w-full max-w-md bg-gray-800 text-white mb-8">
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-center">Mint Dira</CardTitle>
-          <CardDescription className="text-center text-gray-400">Mint Dira based on your locked collateral</CardDescription>
+          <CardDescription className="text-center text-gray-400">
+            Mint Dira based on your locked OM
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleMint}>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-400 mb-2">
-                Locked Collateral: {lockedCollateral.toFixed(2)} ATOM
+                Locked Collateral: {lockedCollateral.toFixed(2)} OM
               </label>
               <p className="text-sm text-gray-400">
-                Current ATOM price: {currentAtomPrice.toFixed(2)} Dira
+                Current OM price: {currentOmPrice.toFixed(2)} Dira
               </p>
               <p className="text-sm text-gray-400">
-                Max mintable Dira: {maxMintAmount.toFixed(2)}
+                Max mintable Dira: {maxMintAmount > 0 ? maxMintAmount.toFixed(2) : '0'}
               </p>
               <p className="text-sm text-gray-400">
                 Already minted Dira: {mintedDira.toFixed(2)}
@@ -54,9 +58,9 @@ export default function MintDira() {
                 placeholder="Enter amount"
                 value={mintAmount}
                 onChange={(e) => {
-                  const value = Number(e.target.value)
-                  if (value <= maxMintAmount) {
-                    setMintAmount(e.target.value)
+                  const value = e.target.value
+                  if (Number(value) <= maxMintAmount) {
+                    setMintAmount(value)
                   }
                 }}
                 className="w-full bg-gray-700 text-white"
@@ -66,8 +70,8 @@ export default function MintDira() {
                 step="0.01"
               />
             </div>
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded"
             >
               Mint Dira
@@ -76,9 +80,8 @@ export default function MintDira() {
         </CardContent>
       </Card>
       <div className="w-full max-w-2xl">
-        <AtomPriceChart />
+        <OmPriceChart />
       </div>
     </div>
   )
 }
-

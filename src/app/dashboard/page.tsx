@@ -3,15 +3,20 @@
 import { useEffect, useRef } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { AtomPriceChart } from '@/components/atom-price-chart'
+import { OmPriceChart } from '@/components/om-price-chart'
 import { useDira } from '@/context/DiraContext'
 import { useWallet } from '@/context/WalletContext'
 
 export default function Dashboard() {
-  const { lockedCollateral, mintedDira, currentAtomPrice } = useDira()
+  const { lockedCollateral, mintedDira, currentOmPrice } = useDira()
   const { isConnected, address, disconnectWallet } = useWallet()
-  const collateralValueInAED = lockedCollateral * currentAtomPrice
+
+  // The user’s locked collateral (OM) value in AED
+  const collateralValueInAED = lockedCollateral * currentOmPrice
+
+  // The ratio of how “healthy” your minted Dira is (collateral ratio)
   const loanHealthValue = mintedDira > 0 ? (collateralValueInAED / mintedDira) * 100 : 0
+
   const walletRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -26,10 +31,10 @@ export default function Dashboard() {
         <Card className="bg-gray-800 text-white">
           <CardHeader>
             <CardTitle>Locked Collateral</CardTitle>
-            <CardDescription>Your locked ATOM</CardDescription>
+            <CardDescription>Your locked OM</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-4xl font-bold">{lockedCollateral.toFixed(2)} ATOM</p>
+            <p className="text-4xl font-bold">{lockedCollateral.toFixed(2)} OM</p>
             <p className="text-gray-400">≈ {collateralValueInAED.toFixed(2)} AED</p>
           </CardContent>
         </Card>
@@ -68,7 +73,7 @@ export default function Dashboard() {
         </Card>
       </div>
       <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8">
-        <AtomPriceChart />
+        <OmPriceChart />
         <Card className="bg-gray-800 text-white" ref={walletRef}>
           <CardHeader>
             <CardTitle>Wallet Management</CardTitle>
@@ -81,12 +86,15 @@ export default function Dashboard() {
                 <p className="text-sm mb-4 break-all text-center">
                   {address ? address : 'Unknown'}
                 </p>
-                <Button onClick={disconnectWallet} className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded w-full max-w-xs">
+                <Button
+                  onClick={disconnectWallet}
+                  className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded w-full max-w-xs"
+                >
                   Disconnect Wallet
                 </Button>
                 <div className="w-full h-1 bg-gray-700 my-4"></div>
                 <p className="text-sm text-gray-400 text-center">
-                  Connected to Cosmos Hub and Noble chains
+                  Connected to the Mantra Chain (testnet)
                 </p>
               </>
             ) : (
@@ -98,4 +106,3 @@ export default function Dashboard() {
     </div>
   )
 }
-
