@@ -8,7 +8,7 @@ import { OmPriceChart } from '@/components/om-price-chart'
 import { useDira } from '@/context/DiraContext'
 
 export default function ManageCollateral() {
-  const { lockedCollateral, currentOmPrice, lockCollateral, unlockCollateral, checkWalletConnection } = useDira() // Added checkWalletConnection
+  const { lockedCollateral, /*currentOmPrice,*/ lockCollateral, unlockCollateral, checkWalletConnection } = useDira() // Added checkWalletConnection
   const [lockAmount, setLockAmount] = useState(0)
   const [unlockAmount, setUnlockAmount] = useState(0)
 

@@ -1,16 +1,34 @@
 import * as React from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X } from "lucide-react"
-
 import { cn } from "@/lib/utils"
 
 const Dialog = DialogPrimitive.Root
-
 const DialogTrigger = DialogPrimitive.Trigger
 
-const DialogPortal = ({ className, ...props }: DialogPrimitive.DialogPortalProps) => (
-  <DialogPrimitive.Portal className={cn(className)} {...props} />
-)
+// 1. Explicitly Define DialogPortalProps Interface (Simplified)
+interface DialogPortalProps
+  extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Portal> {
+  className?: string;
+}
+
+// 2. Use React.forwardRef with simplified type and direct return
+const DialogPortal = React.forwardRef<
+  React.ComponentRef<typeof DialogPrimitive.Portal>, // Use ComponentRef instead of ElementRef
+  DialogPortalProps
+>(
+  (props, ) => (
+    <DialogPrimitive.Portal
+      // ref={ref}
+      className={cn(props.className)} // Access className directly from props
+      {...props} // Spread all props
+    />
+  )
+) as React.ForwardRefExoticComponent<
+  React.PropsWithoutRef<DialogPortalProps> & React.RefAttributes<React.ComponentRef<typeof DialogPrimitive.Portal>>
+>;
+
+
 DialogPortal.displayName = DialogPrimitive.Portal.displayName
 
 const DialogOverlay = React.forwardRef<
@@ -82,5 +100,4 @@ const DialogDescription = React.forwardRef<
 ))
 DialogDescription.displayName = DialogPrimitive.Description.displayName
 
-export { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription }
-
+export { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription, DialogPortal }

@@ -11,14 +11,7 @@ const chainId = process.env.NEXT_PUBLIC_MANTRA_CHAIN_ID!
 const cw20ContractAddress = process.env.NEXT_PUBLIC_CW20_DIRA_CONTRACT_ADDRESS!
 
 export default function DashboardPage() { // Changed component name to DashboardPage
-  const {
-    lockedCollateral,
-    mintedDira,
-    currentOmPrice,
-    mintableHealth,
-    liquidationHealth,
-    collateralDenom,
-  } = useDira()
+  const { /*lockedCollateral, mintedDira, currentOmPrice, mintableHealth, liquidationHealth, collateralDenom,*/ } = useDira()
   const { isConnected, address, disconnectWallet, connectWallet } = useWallet() // Use useWallet hook
 
   return (

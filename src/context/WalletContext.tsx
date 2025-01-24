@@ -15,9 +15,9 @@ interface WalletContextType {
   isConnected: boolean;
   address: string | null;
   cosmWasmClient: CosmWasmClient | null;
-  connectWallet: (onConnectSuccess?: () => void, onConnectFailed?: () => void) => Promise<void>; // Add optional callback and error callback
+  connectWallet: (onConnectSuccess?: () => void, onConnectFailed?: () => void) => Promise<void>;
   disconnectWallet: () => void;
-  getSigningClient: () => Promise<any>;
+  getSigningClient: () => Promise<SigningCosmWasmClient | undefined>;
 }
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
@@ -26,9 +26,9 @@ const mantraChainInfo: ChainInfo = {
   chainId: process.env.NEXT_PUBLIC_MANTRA_CHAIN_ID!,
   chainName: process.env.NEXT_PUBLIC_MANTRA_TESTNET_NAME!,
   rpc: process.env.NEXT_PUBLIC_MANTRA_RPC_ENDPOINT!,
-  rest: 'https://api.dukong.mantrachain.io', //  REST endpoint for Dukong
+  rest: 'https://api.dukong.mantrachain.io',
   bip44: {
-    coinType: 118, // ATOM coin type (can use 60 for OM if needed)
+    coinType: 118,
   },
   bech32Config: {
     bech32PrefixAccAddr: process.env.NEXT_PUBLIC_BECH32_HRP!,
@@ -40,9 +40,9 @@ const mantraChainInfo: ChainInfo = {
   },
   currencies: [
     {
-      coinDenom: 'OM', // Display Denom
-      coinMinimalDenom: process.env.NEXT_PUBLIC_DENOM!, // Denom used in transactions
-      coinDecimals: 6, // Decimals of OM
+      coinDenom: 'OM',
+      coinMinimalDenom: process.env.NEXT_PUBLIC_DENOM!,
+      coinDecimals: 6,
       coinGeckoId: 'mantra-dao',
     },
   ],
@@ -95,11 +95,11 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
 
-  const connectWallet = useCallback(async (onConnectSuccess?: () => void, onConnectFailed?: () => void) => { // Implement callback
+  const connectWallet = useCallback(async (onConnectSuccess?: () => void, onConnectFailed?: () => void) => {
     if (!window.keplr) {
-      toast.error('Keplr wallet extension is required. Please install Keplr.'); // More specific error
+      toast.error('Keplr wallet extension is required. Please install Keplr.');
       if (typeof onConnectFailed === 'function') {
-        onConnectFailed(); // Call error callback
+        onConnectFailed();
       }
       return;
     }
@@ -114,7 +114,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       if (accounts.length === 0) {
         toast.error('No accounts found in Keplr wallet.');
         if (typeof onConnectFailed === 'function') {
-          onConnectFailed(); // Call error callback
+          onConnectFailed();
         }
         return;
       }
@@ -137,7 +137,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       console.error('Error connecting to wallet:', error);
       toast.error('Failed to connect to wallet.');
       if (typeof onConnectFailed === 'function') {
-        onConnectFailed(); // Call error callback
+        onConnectFailed();
       }
     }
   }, []);

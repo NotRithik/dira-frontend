@@ -1,10 +1,9 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { debounce } from 'lodash'; // Import lodash debounce
 import { Slider } from '@/components/ui/slider'
 import { OmPriceChart } from '@/components/om-price-chart'
 import { useDira } from '@/context/DiraContext'
@@ -24,19 +23,6 @@ export default function ManageDira() {
   const [returnAmount, setReturnAmount] = useState<string>('')
   const [mintPercentage, setMintPercentage] = useState(0)
   const [returnPercentage, setReturnPercentage] = useState(0)
-
-  // Debounced state setters for sliders
-  const debouncedSetMintPercentage = useRef(
-    debounce((value) => {
-      setMintPercentage(value);
-    }, 150) // 150ms debounce delay
-  ).current;
-
-  const debouncedSetReturnPercentage = useRef(
-    debounce((value) => {
-      setReturnPercentage(value);
-    }, 150) // 150ms debounce delay
-  ).current;
 
 
   // Replace 0.8 with `mintableHealth`.
@@ -126,7 +112,7 @@ export default function ManageDira() {
                   Percentage to mint
                 </label>
                 <Slider
-                  value={[mintPercentage]} // Use debounced function
+                  value={[mintPercentage]}
                   onValueChange={(value) => setMintPercentage(value[0])}
                   max={100}
                   step={1}
@@ -184,7 +170,7 @@ export default function ManageDira() {
                   Percentage to return
                 </label>
                 <Slider
-                  value={[returnPercentage]} // Use debounced function
+                  value={[returnPercentage]}
                   onValueChange={(value) => setReturnPercentage(value[0])}
                   max={100}
                   step={1}

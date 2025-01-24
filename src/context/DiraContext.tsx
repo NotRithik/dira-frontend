@@ -8,6 +8,11 @@ import type { ExecuteMsg } from "@/types/ExecuteMsg"
 import { toast } from "sonner"
 import { WalletConnectionPopup } from "@/components/WalletConnectionPopup"
 
+type Funds = {
+    amount: string;
+    denom: string;
+}[];
+
 interface DiraContextType {
   lockedCollateral: number
   mintedDira: number
@@ -35,8 +40,8 @@ export function DiraProvider({ children }: { children: React.ReactNode }) {
   const [collateralDenom, setCollateralDenom] = useState<string>("")
   const [isLoading, setIsLoading] = useState(false)
   const [isWalletPopupOpen, setIsWalletPopupOpen] = useState(false)
-  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null)
-  const [isConnectingWallet, setIsConnectingWallet] = useState(false); // NEW STATE
+  // const [/*pendingAction,*/ setPendingAction] = useState<(() => void) | null>(null)
+  const [isConnectingWallet, setIsConnectingWallet] = useState(false);
 
   const pendingActionRef = useRef<(() => void) | null>(null);
 
@@ -93,7 +98,7 @@ export function DiraProvider({ children }: { children: React.ReactNode }) {
   }, [fetchData])
 
 
-  const executeContract = async (message: ExecuteMsg, funds: any[] = []) => {
+  const executeContract = async (message: ExecuteMsg, funds?: Funds) => {
     if (!checkWalletConnection(() => executeContract(message, funds))) return
 
     setIsLoading(true)
@@ -299,7 +304,7 @@ export function DiraProvider({ children }: { children: React.ReactNode }) {
       <WalletConnectionPopup isOpen={isWalletPopupOpen} onClose={() => {
           console.log("DiraContext: WalletConnectionPopup onClose: called");
           setIsWalletPopupOpen(false);
-          setPendingAction(null);
+          // setPendingAction(null);
         }} onConnect={handleConnectWalletPopupConnect} />
       {children}
     </DiraContext.Provider>

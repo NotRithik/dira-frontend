@@ -5,8 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { omPriceData } from "@/utils/omPriceData"
 import { useDira } from "@/context/DiraContext"
 
-export function OmPriceChart() {
-  const { currentOmPrice } = useDira()
+export function OmPriceChart() { // Removed currentOmPrice from destructuring
+  const {} = useDira() // Destructure even if empty to use the context
 
   // The data is still hardcoded for historical OM price, but we multiply each
   // entry by 3.67 to simulate an AED conversion. The actual price of the last
