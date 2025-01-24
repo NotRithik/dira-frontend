@@ -59,6 +59,7 @@ const mantraChainInfo: ChainInfo = {
       },
     },
   ],
+  features: ["cosmwasm"],
   stakeCurrency: {
     coinDenom: 'OM',
     coinMinimalDenom: process.env.NEXT_PUBLIC_DENOM!,
