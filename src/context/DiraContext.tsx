@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useState, useEffect, useCallback } from "react"
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react"
 import { useWallet } from "./WalletContext"
 import { Decimal } from "decimal.js"
 import type { ExecuteMsg } from "@/types/ExecuteMsg"
@@ -26,7 +26,7 @@ interface DiraContextType {
 const DiraContext = createContext<DiraContextType | undefined>(undefined)
 
 export function DiraProvider({ children }: { children: React.ReactNode }) {
-  const { isConnected, address, cosmWasmClient, getSigningClient, connectWallet } = useWallet() // Include connectWallet from WalletContext
+  const { isConnected, address, cosmWasmClient, getSigningClient, connectWallet } = useWallet()
   const [lockedCollateral, setLockedCollateral] = useState(0)
   const [mintedDira, setMintedDira] = useState(0)
   const [currentOmPrice, setCurrentOmPrice] = useState(0)
@@ -36,8 +36,10 @@ export function DiraProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(false)
   const [isWalletPopupOpen, setIsWalletPopupOpen] = useState(false)
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null)
+  const [isConnectingWallet, setIsConnectingWallet] = useState(false); // NEW STATE
 
-  // These environment variables should be defined in your .env or similar
+  const pendingActionRef = useRef<(() => void) | null>(null);
+
   const contractAddress = process.env.NEXT_PUBLIC_DIRA_CONTRACT_ADDRESS!
   const cw20ContractAddress = process.env.NEXT_PUBLIC_CW20_DIRA_CONTRACT_ADDRESS!
   const testnetDenom = process.env.NEXT_PUBLIC_DENOM!
@@ -47,37 +49,31 @@ export function DiraProvider({ children }: { children: React.ReactNode }) {
 
     setIsLoading(true)
     try {
-      // 1. Current price of OM in Dirham (AED)
       const price = await cosmWasmClient.queryContractSmart(contractAddress, {
         query_collateral_price: {},
       })
       setCurrentOmPrice(new Decimal(price.collateral_price).toNumber())
 
-      // 2. Locked collateral (OM) for this wallet
       const locked = await cosmWasmClient.queryContractSmart(contractAddress, {
         query_locked_collateral: { wallet_address_to_query: address },
       })
-      setLockedCollateral(new Decimal(locked.collateral_locked).toNumber()) // Removed .div(1e6)
+      setLockedCollateral(new Decimal(locked.collateral_locked).toNumber())
 
-      // 3. Minted Dira
       const minted = await cosmWasmClient.queryContractSmart(contractAddress, {
         query_minted_dira: { wallet_address_to_query: address },
       })
-      setMintedDira(new Decimal(minted.dira_minted).toNumber()) // Removed .div(1e6)
+      setMintedDira(new Decimal(minted.dira_minted).toNumber())
 
-      // 4. Liquidation health
       const liqHealth = await cosmWasmClient.queryContractSmart(contractAddress, {
         query_liquidation_health: {},
       })
       setLiquidationHealth(new Decimal(liqHealth.liquidation_health).toNumber())
 
-      // 5. Mintable health
       const mintHealth = await cosmWasmClient.queryContractSmart(contractAddress, {
         query_mintable_health: {},
       })
       setMintableHealth(new Decimal(mintHealth.mintable_health).toNumber())
 
-      // 6. Collateral denom (should be "uom" or similar)
       const denom = await cosmWasmClient.queryContractSmart(contractAddress, {
         query_collateral_token_denom: {},
       })
@@ -92,21 +88,17 @@ export function DiraProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     fetchData()
-
-    // Set up interval to fetch data every 1 second (1000 ms)
     const intervalId = setInterval(fetchData, 1000)
-
-    // Clear the interval when the component unmounts to prevent memory leaks
     return () => clearInterval(intervalId)
-  }, [fetchData]) // fetchData is a dependency, but it's useCallback, so it won't cause infinite loop
+  }, [fetchData])
 
 
-  const executeContract = async (message: ExecuteMsg, funds: any[] = []) => { // ADD THIS LINE and modify original executeContract to call this one
+  const executeContract = async (message: ExecuteMsg, funds: any[] = []) => {
     if (!checkWalletConnection(() => executeContract(message, funds))) return
 
     setIsLoading(true)
     try {
-        console.log("executeContract: Starting execution", { message, funds }); // ADD THIS LINE
+        console.log("DiraContext: executeContract: Starting execution", { message, funds });
         const signingClient = await getSigningClient()
         if (!signingClient) {
             throw new Error("Failed to get signing client.")
@@ -116,16 +108,16 @@ export function DiraProvider({ children }: { children: React.ReactNode }) {
             amount: [{ amount: "5000", denom: testnetDenom }],
             gas: "500000",
         }
-        console.log("executeContract: Fee object:", fee); // ADD THIS LINE - Log the fee object
+        console.log("DiraContext: executeContract: Fee object:", fee);
 
-        console.log("executeContract: Calling signingClient.execute with:", { address: address!, contractAddress, message, fee }); // Log before execute
+        console.log("DiraContext: executeContract: Calling signingClient.execute with:", { address: address!, contractAddress, message, fee });
 
-        const result = await signingClient.execute(address!, contractAddress, message, fee, undefined, funds) // inside try block
-        console.log("executeContract: Transaction Result", result); // ADD THIS LINE after signingClient.execute
+        const result = await signingClient.execute(address!, contractAddress, message, fee, undefined, funds)
+        console.log("DiraContext: executeContract: Transaction Result", result);
         await fetchData()
         toast.success("Transaction successful!")
     } catch (error) {
-        console.error("executeContract: Error during execution:", error) // Modified console.error message
+        console.error("DiraContext: executeContract: Error during execution:", error)
         toast.error("Transaction failed.")
     } finally {
         setIsLoading(false)
@@ -134,58 +126,90 @@ export function DiraProvider({ children }: { children: React.ReactNode }) {
 
   const checkWalletConnection = useCallback(
     (action: () => void) => {
-      if (!isConnected) {
-        setIsWalletPopupOpen(true)
-        setPendingAction(() => action)
-        return false
+      console.log("DiraContext: checkWalletConnection: START - isConnected:", isConnected, "isConnectingWallet:", isConnectingWallet);
+      if (isConnectingWallet) { // ADDED CHECK FOR isConnectingWallet
+        console.log("DiraContext: checkWalletConnection: Wallet connection in progress, returning false");
+        return false; // Prevent popup if already connecting
       }
-      return true
+
+      if (!isConnected) {
+        console.log("DiraContext: checkWalletConnection: Wallet is NOT connected - Opening popup");
+        setIsWalletPopupOpen(true)
+        pendingActionRef.current = action;
+        console.log("DiraContext: checkWalletConnection: Popup opened, pendingAction set, returning false");
+        return false;
+      } else {
+        console.log("DiraContext: checkWalletConnection: Wallet IS connected - Proceeding with action");
+        return true;
+      }
     },
-    [isConnected],
+    [isConnected, isConnectingWallet], // ADDED isConnectingWallet to dependencies
   )
 
-  // Lock Collateral (OM)
+  const handleConnectWalletPopupConnect = useCallback(() => {
+    console.log("DiraContext: handleConnectWalletPopupConnect: called");
+    setIsWalletPopupOpen(false);
+    console.log("DiraContext: handleConnectWalletPopupConnect: setIsWalletPopupOpen(false) called immediately");
+    setIsConnectingWallet(true); // SET isConnectingWallet to true HERE
+    console.log("DiraContext: handleConnectWalletPopupConnect: setIsConnectingWallet(true) called");
+    connectWallet(() => {
+      console.log("DiraContext: handleConnectWalletPopupConnect: connectWallet callback (onConnectSuccess) executed");
+      setIsConnectingWallet(false); // SET isConnectingWallet to false in callback
+      console.log("DiraContext: handleConnectWalletPopupConnect: setIsConnectingWallet(false) called in callback");
+      if (pendingActionRef.current) {
+        console.log("DiraContext: handleConnectWalletPopupConnect: pendingActionRef.current exists, executing it");
+        pendingActionRef.current();
+        pendingActionRef.current = null;
+        console.log("DiraContext: handleConnectWalletPopupConnect: pendingActionRef.current executed and cleared");
+      } else {
+        console.log("DiraContext: handleConnectWalletPopupConnect: No pending action to execute");
+      }
+    }, () => { // ADDED error callback to also set isConnectingWallet to false on failure
+      setIsConnectingWallet(false);
+      console.log("DiraContext: handleConnectWalletPopupConnect: setIsConnectingWallet(false) called in error callback");
+    });
+  }, [connectWallet, setIsWalletPopupOpen, pendingActionRef, setIsConnectingWallet]); // ADDED setIsConnectingWallet to dependencies
+
+
   const lockCollateral = async (amount: number) => {
-    if (!checkWalletConnection(() => lockCollateral(amount))) return
+    if (!await checkWalletConnection(() => lockCollateral(amount))) return;
     if (amount <= 0) {
       toast.error("Amount must be greater than 0")
       return
     }
-    const amountInMicroOM = new Decimal(amount).mul(1000000); // Convert OM to uom
+    const amountInMicroOM = new Decimal(amount).mul(1000000);
     const message: ExecuteMsg = { lock_collateral: {} }
-    console.log("lockCollateral: Message:", message); // ADD THIS LINE - Log the message
+    console.log("DiraContext: lockCollateral: Message:", message);
     const funds = [
       {
         denom: collateralDenom,
-        amount: amountInMicroOM.toString(), // Use converted amount
+        amount: amountInMicroOM.toString(),
       },
     ];
-    console.log("lockCollateral: Funds:", funds); // ADD THIS LINE - Log the funds
+    console.log("DiraContext: lockCollateral: Funds:", funds);
     executeContract(message, funds)
-    console.log("lockCollateral: executeContract called", { message, funds });
+    console.log("DiraContext: lockCollateral: executeContract called", { message, funds });
 
   }
 
-  // Unlock Collateral (OM)
   const unlockCollateral = async (amount: number) => {
-    if (!checkWalletConnection(() => unlockCollateral(amount))) return
+    if (!await checkWalletConnection(() => unlockCollateral(amount))) return;
     if (amount <= 0) {
       toast.error("Amount must be greater than 0")
       return
     }
     const message: ExecuteMsg = {
       unlock_collateral: {
-        collateral_amount_to_unlock: amount.toString(), // Use converted amount
+        collateral_amount_to_unlock: amount.toString(),
       },
     };
-    console.log("unlockCollateral: Message:", message); // ADD THIS LINE - Log the message
+    console.log("DiraContext: unlockCollateral: Message:", message);
     executeContract(message)
-    console.log("unlockCollateral: executeContract called", { message }); // ADD THIS LINE
+    console.log("DiraContext: unlockCollateral: executeContract called", { message });
   }
 
-  // Mint Dira
   const mintDira = async (amount: number) => {
-    if (!checkWalletConnection(() => mintDira(amount))) return
+    if (!await checkWalletConnection(() => mintDira(amount))) return;
     if (amount <= 0) {
       toast.error("Amount must be greater than 0")
       return
@@ -196,12 +220,11 @@ export function DiraProvider({ children }: { children: React.ReactNode }) {
       },
     }
     executeContract(message)
-    console.log("mintDira: executeContract called", { message }); // ADD THIS LINE
+    console.log("DiraContext: mintDira: executeContract called", { message });
   }
 
-  // Return (Burn) Dira
   const returnDira = async (amount: number) => {
-    if (!checkWalletConnection(() => returnDira(amount))) return
+    if (!await checkWalletConnection(() => returnDira(amount))) return;
     if (amount <= 0) {
       toast.error("Amount must be greater than 0")
       return
@@ -227,7 +250,6 @@ export function DiraProvider({ children }: { children: React.ReactNode }) {
         throw new Error("Failed to get signing client.")
       }
 
-      // Increase allowance
       const allowanceFee = {
         amount: [{ amount: "5000", denom: testnetDenom }],
         gas: "300000",
@@ -238,20 +260,19 @@ export function DiraProvider({ children }: { children: React.ReactNode }) {
         increaseAllowanceMsg,
         allowanceFee,
       )
-      console.log("Allowance transaction result:", allowanceResult)
+      console.log("DiraContext: returnDira: Allowance transaction result:", allowanceResult)
 
-      // Then burn
       const burnFee = {
         amount: [{ amount: "5000", denom: testnetDenom }],
         gas: "600000",
       }
       const burnResult = await signingClient.execute(address!, contractAddress, burnDiraMsg, burnFee)
-      console.log("Burn transaction result:", burnResult)
+      console.log("DiraContext: returnDira: Burn transaction result:", burnResult)
 
       await fetchData()
       toast.success("Successfully returned Dira!")
     } catch (error) {
-      console.error("Error returning Dira:", error)
+      console.error("DiraContext: returnDira: Error returning Dira:", error)
       toast.error("Failed to return Dira.")
     } finally {
       setIsLoading(false)
@@ -275,11 +296,12 @@ export function DiraProvider({ children }: { children: React.ReactNode }) {
         checkWalletConnection,
       }}
     >
-      {children}
       <WalletConnectionPopup isOpen={isWalletPopupOpen} onClose={() => {
+          console.log("DiraContext: WalletConnectionPopup onClose: called");
           setIsWalletPopupOpen(false);
-          setPendingAction(null); // Clear pending action when closing manually
-        }} onConnect={() => { connectWallet(() => { setIsWalletPopupOpen(false); if (pendingAction) { pendingAction(); setPendingAction(null); } }); }} />
+          setPendingAction(null);
+        }} onConnect={handleConnectWalletPopupConnect} />
+      {children}
     </DiraContext.Provider>
   )
 }

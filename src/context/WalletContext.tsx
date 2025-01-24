@@ -15,7 +15,7 @@ interface WalletContextType {
   isConnected: boolean;
   address: string | null;
   cosmWasmClient: CosmWasmClient | null;
-  connectWallet: (onConnectSuccess?: () => void) => Promise<void>; // Add optional callback
+  connectWallet: (onConnectSuccess?: () => void, onConnectFailed?: () => void) => Promise<void>; // Add optional callback and error callback
   disconnectWallet: () => void;
   getSigningClient: () => Promise<any>;
 }
@@ -95,9 +95,12 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
 
-  const connectWallet = useCallback(async (onConnectSuccess?: () => void) => { // Implement callback
+  const connectWallet = useCallback(async (onConnectSuccess?: () => void, onConnectFailed?: () => void) => { // Implement callback
     if (!window.keplr) {
       toast.error('Keplr wallet extension is required. Please install Keplr.'); // More specific error
+      if (typeof onConnectFailed === 'function') {
+        onConnectFailed(); // Call error callback
+      }
       return;
     }
 
@@ -110,6 +113,9 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
       if (accounts.length === 0) {
         toast.error('No accounts found in Keplr wallet.');
+        if (typeof onConnectFailed === 'function') {
+          onConnectFailed(); // Call error callback
+        }
         return;
       }
 
@@ -117,15 +123,22 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       setCosmWasmClient(client);
       setAddress(accounts[0].address);
       setIsConnected(true);
-      toast.success('Keplr Wallet connected successfully!'); // Keplr specific success message
+      toast.success('Keplr Wallet connected successfully!');
       console.log("connectWallet: Connection successful, calling onConnectSuccess");
-      if (typeof onConnectSuccess === 'function') { // Check if onConnectSuccess is a function
-        onConnectSuccess(); // Execute the callback if provided
-        console.log("connectWallet: After calling onConnectSuccess");
+      if (typeof onConnectSuccess === 'function') {
+        console.log("connectWallet: onConnectSuccess callback provided and is a function");
+        console.log("connectWallet: Before onConnectSuccess callback execution");
+        onConnectSuccess();
+        console.log("connectWallet: After onConnectSuccess callback execution");
+      } else {
+        console.log("connectWallet: onConnectSuccess callback *not* provided or *not* a function");
       }
     } catch (error) {
       console.error('Error connecting to wallet:', error);
       toast.error('Failed to connect to wallet.');
+      if (typeof onConnectFailed === 'function') {
+        onConnectFailed(); // Call error callback
+      }
     }
   }, []);
 

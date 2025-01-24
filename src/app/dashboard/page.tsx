@@ -19,7 +19,7 @@ export default function DashboardPage() { // Changed component name to Dashboard
     liquidationHealth,
     collateralDenom,
   } = useDira()
-  const { isConnected, address, disconnectWallet } = useWallet() // Use useWallet hook
+  const { isConnected, address, disconnectWallet, connectWallet } = useWallet() // Use useWallet hook
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen">
@@ -84,9 +84,14 @@ export default function DashboardPage() { // Changed component name to Dashboard
               </div>
             )}
             {!isConnected && (
-              <p className="text-sm text-gray-400">
-                Connect your wallet to see address and manage assets.
-              </p>
+              <div className="space-y-2">
+                <p className="text-sm text-gray-400 mb-2">
+                  Connect your wallet to see address and manage assets.
+                </p>
+                <Button onClick={() => connectWallet()} className="w-full">
+                  Connect Wallet
+                </Button>
+              </div>
             )}
           </CardContent>
         </Card>

@@ -11,7 +11,7 @@ import {
 interface WalletConnectionPopupProps {
   isOpen: boolean;
   onClose: () => void;
-  onConnect: () => void;
+  onConnect: (onConnectSuccess: () => void) => void; // Modify onConnect prop to accept callback
 }
 
 export const WalletConnectionPopup: React.FC<WalletConnectionPopupProps> = ({
@@ -19,7 +19,26 @@ export const WalletConnectionPopup: React.FC<WalletConnectionPopupProps> = ({
   onClose,
   onConnect,
 }) => {
-  if (!isOpen) return null;
+  if (!isOpen) {
+    console.log("WalletConnectionPopup: isOpen is false, returning null"); // ADDED LOG
+    return null;
+  }
+
+  const handleConnect = () => {
+    console.log("WalletConnectionPopup: handleConnect called"); // ADDED LOG
+    onConnect(() => { // Call onConnect with a success callback
+      console.log("WalletConnectionPopup: onConnect callback executed (onConnectSuccess from DiraContext)"); // ADDED LOG
+      onClose(); // Close the popup after successful connection
+      console.log("WalletConnectionPopup: onClose called after onConnect success callback"); // ADDED LOG
+    });
+    onClose(); // Close the popup after successful connection
+  };
+
+  const handleCancel = () => {
+    console.log("WalletConnectionPopup: handleCancel called"); // ADDED LOG
+    onClose();
+  };
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-75">
@@ -31,10 +50,10 @@ export const WalletConnectionPopup: React.FC<WalletConnectionPopupProps> = ({
           </CardDescription>
         </CardHeader>
         <CardContent className="flex justify-center space-x-4">
-          <Button variant="secondary" onClick={onClose}>
+          <Button variant="secondary" onClick={handleCancel}>
             Cancel
           </Button>
-          <Button onClick={onConnect}>Connect Wallet</Button>
+          <Button onClick={handleConnect}>Connect Wallet</Button>
         </CardContent>
       </Card>
     </div>
