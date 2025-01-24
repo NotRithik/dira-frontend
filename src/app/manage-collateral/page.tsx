@@ -1,12 +1,12 @@
-'use client'
+"use client"
 
-import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Slider } from '@/components/ui/slider'
-import { OmPriceChart } from '@/components/om-price-chart'
-import { useDira } from '@/context/DiraContext'
+import { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Slider } from "@/components/ui/slider"
+import { OmPriceChart } from "@/components/om-price-chart"
+import { useDira } from "@/context/DiraContext"
 
 export default function ManageCollateral() {
   const {
@@ -16,18 +16,17 @@ export default function ManageCollateral() {
     mintableHealth,
     lockCollateral,
     unlockCollateral,
+    checkWalletConnection,
   } = useDira()
 
-  const [lockAmount, setLockAmount] = useState<string>('')
-  const [unlockAmount, setUnlockAmount] = useState<string>('')
+  const [lockAmount, setLockAmount] = useState<string>("")
+  const [unlockAmount, setUnlockAmount] = useState<string>("")
   const [unlockPercentage, setUnlockPercentage] = useState(0)
 
   // Instead of using hard-coded 0.8, we use `mintableHealth` to figure out
   // the minimum collateral needed to back mintedDira. The max unlockable is
   // anything above that threshold.
-  const minCollateralNeeded = mintedDira > 0
-    ? (mintedDira / currentOmPrice) / mintableHealth
-    : 0
+  const minCollateralNeeded = mintedDira > 0 ? mintedDira / currentOmPrice / mintableHealth : 0
 
   const maxUnlockAmount = Math.max(0, lockedCollateral - minCollateralNeeded)
 
@@ -35,25 +34,25 @@ export default function ManageCollateral() {
     if (maxUnlockAmount > 0) {
       setUnlockAmount(((unlockPercentage / 100) * maxUnlockAmount).toFixed(2))
     } else {
-      setUnlockAmount('0')
+      setUnlockAmount("0")
     }
   }, [unlockPercentage, maxUnlockAmount])
 
   const handleLock = (e: React.FormEvent) => {
     e.preventDefault()
-    const amount = parseFloat(lockAmount)
+    const amount = Number.parseFloat(lockAmount)
     if (!isNaN(amount) && amount > 0) {
-      lockCollateral(amount)
-      setLockAmount('')
+      checkWalletConnection(() => lockCollateral(amount))
+      setLockAmount("")
     }
   }
 
   const handleUnlock = (e: React.FormEvent) => {
     e.preventDefault()
-    const amount = parseFloat(unlockAmount)
+    const amount = Number.parseFloat(unlockAmount)
     if (!isNaN(amount) && amount > 0 && amount <= maxUnlockAmount) {
-      unlockCollateral(amount)
-      setUnlockAmount('')
+      checkWalletConnection(() => unlockCollateral(amount))
+      setUnlockAmount("")
       setUnlockPercentage(0)
     }
   }
@@ -112,7 +111,7 @@ export default function ManageCollateral() {
                   onChange={(e) => {
                     const val = e.target.value
                     setUnlockAmount(val)
-                    const numVal = parseFloat(val)
+                    const numVal = Number.parseFloat(val)
                     if (!isNaN(numVal) && maxUnlockAmount > 0) {
                       setUnlockPercentage((numVal / maxUnlockAmount) * 100)
                     } else {
@@ -127,9 +126,7 @@ export default function ManageCollateral() {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-400 mb-2">
-                  Percentage to unlock
-                </label>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Percentage to unlock</label>
                 <Slider
                   value={[unlockPercentage]}
                   onValueChange={(value) => setUnlockPercentage(value[0])}
@@ -138,16 +135,12 @@ export default function ManageCollateral() {
                 />
                 <span className="text-sm text-gray-400">{unlockPercentage.toFixed(2)}%</span>
               </div>
-              <p className="text-sm text-gray-400 mb-4">
-                Locked collateral: {lockedCollateral.toFixed(2)} OM
-              </p>
-              <p className="text-sm text-gray-400 mb-4">
-                Maximum unlockable: {maxUnlockAmount.toFixed(2)} OM
-              </p>
+              <p className="text-sm text-gray-400 mb-4">Locked collateral: {lockedCollateral.toFixed(2)} OM</p>
+              <p className="text-sm text-gray-400 mb-4">Maximum unlockable: {maxUnlockAmount.toFixed(2)} OM</p>
               <Button
                 type="submit"
                 className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-                disabled={parseFloat(unlockAmount) > maxUnlockAmount}
+                disabled={Number.parseFloat(unlockAmount) > maxUnlockAmount}
               >
                 Unlock Collateral
               </Button>
@@ -161,3 +154,4 @@ export default function ManageCollateral() {
     </div>
   )
 }
+
