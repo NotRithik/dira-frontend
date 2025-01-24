@@ -88,11 +88,18 @@ export function DiraProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+
+    // Set up interval to fetch data every 1 second (1000 ms)
+    const intervalId = setInterval(fetchData, 1000);
+
+    // Clear the interval when the component unmounts to prevent memory leaks
+    return () => clearInterval(intervalId);
+
+  }, [fetchData]); // fetchData is a dependency, but it's useCallback, so it won't cause infinite loop
 
   const executeContract = async (message: ExecuteMsg, funds: any[] = []) => {
     if (!isConnected) {
-      toast.error('Please connect your wallet.');
+      toast.error('Please connect your Keplr wallet to perform this action.');
       return;
     }
 
@@ -130,11 +137,15 @@ export function DiraProvider({ children }: { children: React.ReactNode }) {
 
   // Lock Collateral (OM)
   const lockCollateral = async (amount: number) => {
+    if (!isConnected) {
+      toast.error('Connect Keplr Wallet to lock collateral.');
+      return;
+    }
     const message: ExecuteMsg = { lock_collateral: {} };
     const funds = [
       {
         denom: collateralDenom,
-        amount: new Decimal(amount).toString(), // Removed .mul(1e6)
+        amount: new Decimal(amount).toString(),
       },
     ];
     executeContract(message, funds);
@@ -142,9 +153,13 @@ export function DiraProvider({ children }: { children: React.ReactNode }) {
 
   // Unlock Collateral (OM)
   const unlockCollateral = async (amount: number) => {
+    if (!isConnected) {
+      toast.error('Connect Keplr Wallet to unlock collateral.');
+      return;
+    }
     const message: ExecuteMsg = {
       unlock_collateral: {
-        collateral_amount_to_unlock: new Decimal(amount).toString(), // Already corrected - Removed .mul(1e6)
+        collateral_amount_to_unlock: new Decimal(amount).toString(),
       },
     };
     executeContract(message);
@@ -152,9 +167,13 @@ export function DiraProvider({ children }: { children: React.ReactNode }) {
 
   // Mint Dira
   const mintDira = async (amount: number) => {
+    if (!isConnected) {
+      toast.error('Connect Keplr Wallet to mint Dira.');
+      return;
+    }
     const message: ExecuteMsg = {
       mint_dira: {
-        dira_to_mint: new Decimal(amount).toString(), // Removed .mul(1e6)
+        dira_to_mint: new Decimal(amount).toString(),
       },
     };
     executeContract(message);
@@ -162,17 +181,21 @@ export function DiraProvider({ children }: { children: React.ReactNode }) {
 
   // Return (Burn) Dira
   const returnDira = async (amount: number) => {
+    if (!isConnected) {
+      toast.error('Connect Keplr Wallet to return Dira.');
+      return;
+    }
     const increaseAllowanceMsg = {
       increase_allowance: {
         spender: contractAddress,
-        amount: new Decimal(amount).mul(1e6).toString(), // Removed .mul(1e6)
+        amount: new Decimal(amount).mul(1e6).toString(),
         expires: { never: {} },
       },
     };
 
     const burnDiraMsg: ExecuteMsg = {
       burn_dira: {
-        dira_to_burn: new Decimal(amount).mul(1e6).toString(), // Removed .mul(1e6)
+        dira_to_burn: new Decimal(amount).mul(1e6).toString(),
       },
     };
 
@@ -185,8 +208,8 @@ export function DiraProvider({ children }: { children: React.ReactNode }) {
 
       // Increase allowance
       const allowanceFee = {
-        amount: [{ amount: '5000', denom: testnetDenom }], // Keep fee amount same
-        gas: '300000', // INCREASE gas limit for allowance
+        amount: [{ amount: '5000', denom: testnetDenom }],
+        gas: '300000',
       };
       const allowanceResult = await signingClient.execute(
         address!,
@@ -199,8 +222,8 @@ export function DiraProvider({ children }: { children: React.ReactNode }) {
       // Then burn
       const burnFee = {
         amount: [{ amount: '5000', denom: testnetDenom }],
-        gas: '600000', // INCREASE gas limit for burn
-      }; // INCREASE gas limit for burn
+        gas: '600000',
+      };
       const burnResult = await signingClient.execute(
         address!,
         contractAddress,

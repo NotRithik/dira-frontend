@@ -97,7 +97,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
   const connectWallet = useCallback(async () => {
     if (!window.keplr) {
-      toast.error('Please install Keplr extension.');
+      toast.error('Keplr wallet extension is required. Please install Keplr.'); // More specific error
       return;
     }
 
@@ -117,7 +117,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       setCosmWasmClient(client);
       setAddress(accounts[0].address);
       setIsConnected(true);
-      toast.success('Wallet connected successfully!');
+      toast.success('Keplr Wallet connected successfully!'); // Keplr specific success message
     } catch (error) {
       console.error('Error connecting to wallet:', error);
       toast.error('Failed to connect to wallet.');

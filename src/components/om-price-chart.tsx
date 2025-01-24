@@ -13,7 +13,7 @@ export function OmPriceChart() {
   // point is fetched from the contract and displayed in other UI places.
   const formattedData = omPriceData.map((item) => ({
     ...item,
-    price: item.price * 3.67,
+    price: (item.price * 3.67).toFixed(2),
   }))
 
   return (
