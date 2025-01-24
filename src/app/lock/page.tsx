@@ -7,16 +7,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { OmPriceChart } from '@/components/om-price-chart'
 import { useDira } from '@/context/DiraContext'
 
-export default function LockCollateral() {
-  const { lockedCollateral, currentOmPrice, lockCollateral, unlockCollateral } = useDira()
-
-  // We’ll no longer use a “maxLockValue” or “percentage” since the contract
-  // does not impose a special limit on how much you can lock.
+export default function ManageCollateral() {
+  const { lockedCollateral, currentOmPrice, lockCollateral, unlockCollateral, checkWalletConnection } = useDira() // Added checkWalletConnection
   const [lockAmount, setLockAmount] = useState(0)
   const [unlockAmount, setUnlockAmount] = useState(0)
 
   const handleLock = (e: React.FormEvent) => {
     e.preventDefault()
+    if (!checkWalletConnection(() => handleLock(e))) return; // Wallet check FIRST
+
     if (lockAmount > 0) {
       lockCollateral(lockAmount)
       setLockAmount(0)
@@ -25,6 +24,8 @@ export default function LockCollateral() {
 
   const handleUnlock = (e: React.FormEvent) => {
     e.preventDefault()
+    if (!checkWalletConnection(() => handleUnlock(e))) return; // Wallet check FIRST
+
     if (unlockAmount > 0 && unlockAmount <= lockedCollateral) {
       unlockCollateral(unlockAmount)
       setUnlockAmount(0)

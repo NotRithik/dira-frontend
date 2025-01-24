@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -17,6 +17,7 @@ export default function ManageDira() {
     mintableHealth,
     mintDira,
     returnDira,
+    checkWalletConnection, // Make sure checkWalletConnection is destructured
   } = useDira()
 
   const [mintAmount, setMintAmount] = useState<string>('')
@@ -55,8 +56,11 @@ export default function ManageDira() {
 
   const handleMint = (e: React.FormEvent) => {
     e.preventDefault()
+    if (!checkWalletConnection(() => handleMint(e))) return; // Check wallet connection FIRST
+
+    if (!checkWalletConnection(() => handleMint(e))) return; // Wallet check first
     const amount = parseFloat(mintAmount)
-    if (amount > 0 && amount <= maxMintAmount) {
+    if (amount > 0 && amount <= maxMintAmount) { // Input validation AFTER wallet check
       mintDira(amount)
       setMintAmount('')
       setMintPercentage(0)
@@ -65,8 +69,10 @@ export default function ManageDira() {
 
   const handleReturn = (e: React.FormEvent) => {
     e.preventDefault()
+    if (!checkWalletConnection(() => handleReturn(e))) return; // Check wallet connection FIRST
+
     const amount = parseFloat(returnAmount)
-    if (amount > 0 && amount <= mintedDira) {
+    if (amount > 0 && amount <= mintedDira) { // Input validation AFTER wallet check
       returnDira(amount)
       setReturnAmount('')
       setReturnPercentage(0)

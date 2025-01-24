@@ -7,8 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { OmPriceChart } from '@/components/om-price-chart'
 import { useDira } from '@/context/DiraContext'
 
-export default function MintDira() {
-  const { lockedCollateral, mintedDira, currentOmPrice, mintableHealth, mintDira } = useDira()
+export default function ManageDira() { // Changed component name to match request
+  const { lockedCollateral, mintedDira, currentOmPrice, mintableHealth, mintDira, checkWalletConnection } = useDira() // Added checkWalletConnection
   const [mintAmount, setMintAmount] = useState('')
 
   // Replacing the 0.8 factor with `mintableHealth`
@@ -16,6 +16,8 @@ export default function MintDira() {
 
   const handleMint = (e: React.FormEvent) => {
     e.preventDefault()
+    if (!checkWalletConnection(() => handleMint(e))) return; // Wallet check FIRST
+
     const amount = Number(mintAmount)
     if (amount > 0 && amount <= maxMintAmount) {
       mintDira(amount)

@@ -26,7 +26,7 @@ interface DiraContextType {
 const DiraContext = createContext<DiraContextType | undefined>(undefined)
 
 export function DiraProvider({ children }: { children: React.ReactNode }) {
-  const { isConnected, address, cosmWasmClient, getSigningClient } = useWallet()
+  const { isConnected, address, cosmWasmClient, getSigningClient, connectWallet } = useWallet() // Include connectWallet from WalletContext
   const [lockedCollateral, setLockedCollateral] = useState(0)
   const [mintedDira, setMintedDira] = useState(0)
   const [currentOmPrice, setCurrentOmPrice] = useState(0)
@@ -263,19 +263,7 @@ export function DiraProvider({ children }: { children: React.ReactNode }) {
       }}
     >
       {children}
-      <WalletConnectionPopup
-        isOpen={isWalletPopupOpen}
-        onClose={() => setIsWalletPopupOpen(false)}
-        onConnect={() => {
-          // Assuming you have a connectWallet function defined elsewhere
-          connectWallet()
-          setIsWalletPopupOpen(false)
-          if (pendingAction) {
-            pendingAction()
-            setPendingAction(null)
-          }
-        }}
-      />
+      <WalletConnectionPopup isOpen={isWalletPopupOpen} onClose={() => setIsWalletPopupOpen(false)} onConnect={() => { connectWallet(() => { setIsWalletPopupOpen(false); if (pendingAction) { pendingAction(); setPendingAction(null); } }); }} />
     </DiraContext.Provider>
   )
 }
@@ -287,4 +275,3 @@ export function useDira() {
   }
   return context
 }
-

@@ -15,7 +15,7 @@ interface WalletContextType {
   isConnected: boolean;
   address: string | null;
   cosmWasmClient: CosmWasmClient | null;
-  connectWallet: () => Promise<void>;
+  connectWallet: (onConnectSuccess?: () => void) => Promise<void>; // Add optional callback
   disconnectWallet: () => void;
   getSigningClient: () => Promise<any>;
 }
@@ -67,7 +67,7 @@ const mantraChainInfo: ChainInfo = {
   },
 };
 
-export function WalletProvider({ children }: { children: React.ReactNode }) {
+export function WalletProvider({ children }: { children: React.ReactNode}) {
   const [isConnected, setIsConnected] = useState(false);
   const [address, setAddress] = useState<string | null>(null);
   const [cosmWasmClient, setCosmWasmClient] = useState<CosmWasmClient | null>(null);
@@ -95,7 +95,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
 
-  const connectWallet = useCallback(async () => {
+  const connectWallet = useCallback(async (onConnectSuccess?: () => void) => { // Implement callback
     if (!window.keplr) {
       toast.error('Keplr wallet extension is required. Please install Keplr.'); // More specific error
       return;
@@ -118,6 +118,9 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       setAddress(accounts[0].address);
       setIsConnected(true);
       toast.success('Keplr Wallet connected successfully!'); // Keplr specific success message
+      if (onConnectSuccess) {
+        onConnectSuccess(); // Execute the callback if provided
+      }
     } catch (error) {
       console.error('Error connecting to wallet:', error);
       toast.error('Failed to connect to wallet.');
