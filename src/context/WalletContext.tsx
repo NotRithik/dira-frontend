@@ -67,7 +67,7 @@ const mantraChainInfo: ChainInfo = {
   },
 };
 
-export function WalletProvider({ children }: { children: React.ReactNode}) {
+export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [isConnected, setIsConnected] = useState(false);
   const [address, setAddress] = useState<string | null>(null);
   const [cosmWasmClient, setCosmWasmClient] = useState<CosmWasmClient | null>(null);
@@ -118,8 +118,10 @@ export function WalletProvider({ children }: { children: React.ReactNode}) {
       setAddress(accounts[0].address);
       setIsConnected(true);
       toast.success('Keplr Wallet connected successfully!'); // Keplr specific success message
-      if (onConnectSuccess) {
+      console.log("connectWallet: Connection successful, calling onConnectSuccess");
+      if (typeof onConnectSuccess === 'function') { // Check if onConnectSuccess is a function
         onConnectSuccess(); // Execute the callback if provided
+        console.log("connectWallet: After calling onConnectSuccess");
       }
     } catch (error) {
       console.error('Error connecting to wallet:', error);

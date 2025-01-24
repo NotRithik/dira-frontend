@@ -100,30 +100,35 @@ export function DiraProvider({ children }: { children: React.ReactNode }) {
     return () => clearInterval(intervalId)
   }, [fetchData]) // fetchData is a dependency, but it's useCallback, so it won't cause infinite loop
 
-  const executeContract = async (message: ExecuteMsg, funds: any[] = []) => {
+
+  const executeContract = async (message: ExecuteMsg, funds: any[] = []) => { // ADD THIS LINE and modify original executeContract to call this one
     if (!checkWalletConnection(() => executeContract(message, funds))) return
 
     setIsLoading(true)
     try {
-      const signingClient = await getSigningClient()
-      if (!signingClient) {
-        throw new Error("Failed to get signing client.")
-      }
+        console.log("executeContract: Starting execution", { message, funds }); // ADD THIS LINE
+        const signingClient = await getSigningClient()
+        if (!signingClient) {
+            throw new Error("Failed to get signing client.")
+        }
 
-      const fee = {
-        amount: [{ amount: "5000", denom: testnetDenom }],
-        gas: "500000",
-      }
+        const fee = {
+            amount: [{ amount: "5000", denom: testnetDenom }],
+            gas: "500000",
+        }
+        console.log("executeContract: Fee object:", fee); // ADD THIS LINE - Log the fee object
 
-      const result = await signingClient.execute(address!, contractAddress, message, fee, undefined, funds)
-      console.log("Transaction result:", result)
-      await fetchData()
-      toast.success("Transaction successful!")
+        console.log("executeContract: Calling signingClient.execute with:", { address: address!, contractAddress, message, fee }); // Log before execute
+
+        const result = await signingClient.execute(address!, contractAddress, message, fee, undefined, funds) // inside try block
+        console.log("executeContract: Transaction Result", result); // ADD THIS LINE after signingClient.execute
+        await fetchData()
+        toast.success("Transaction successful!")
     } catch (error) {
-      console.error("Error executing contract:", error)
-      toast.error("Transaction failed.")
+        console.error("executeContract: Error during execution:", error) // Modified console.error message
+        toast.error("Transaction failed.")
     } finally {
-      setIsLoading(false)
+        setIsLoading(false)
     }
   }
 
@@ -146,14 +151,19 @@ export function DiraProvider({ children }: { children: React.ReactNode }) {
       toast.error("Amount must be greater than 0")
       return
     }
+    const amountInMicroOM = new Decimal(amount).mul(1000000); // Convert OM to uom
     const message: ExecuteMsg = { lock_collateral: {} }
+    console.log("lockCollateral: Message:", message); // ADD THIS LINE - Log the message
     const funds = [
       {
         denom: collateralDenom,
-        amount: new Decimal(amount).toString(),
+        amount: amountInMicroOM.toString(), // Use converted amount
       },
-    ]
+    ];
+    console.log("lockCollateral: Funds:", funds); // ADD THIS LINE - Log the funds
     executeContract(message, funds)
+    console.log("lockCollateral: executeContract called", { message, funds });
+
   }
 
   // Unlock Collateral (OM)
@@ -165,10 +175,12 @@ export function DiraProvider({ children }: { children: React.ReactNode }) {
     }
     const message: ExecuteMsg = {
       unlock_collateral: {
-        collateral_amount_to_unlock: new Decimal(amount).toString(),
+        collateral_amount_to_unlock: amount.toString(), // Use converted amount
       },
-    }
+    };
+    console.log("unlockCollateral: Message:", message); // ADD THIS LINE - Log the message
     executeContract(message)
+    console.log("unlockCollateral: executeContract called", { message }); // ADD THIS LINE
   }
 
   // Mint Dira
@@ -184,6 +196,7 @@ export function DiraProvider({ children }: { children: React.ReactNode }) {
       },
     }
     executeContract(message)
+    console.log("mintDira: executeContract called", { message }); // ADD THIS LINE
   }
 
   // Return (Burn) Dira
@@ -263,7 +276,10 @@ export function DiraProvider({ children }: { children: React.ReactNode }) {
       }}
     >
       {children}
-      <WalletConnectionPopup isOpen={isWalletPopupOpen} onClose={() => setIsWalletPopupOpen(false)} onConnect={() => { connectWallet(() => { setIsWalletPopupOpen(false); if (pendingAction) { pendingAction(); setPendingAction(null); } }); }} />
+      <WalletConnectionPopup isOpen={isWalletPopupOpen} onClose={() => {
+          setIsWalletPopupOpen(false);
+          setPendingAction(null); // Clear pending action when closing manually
+        }} onConnect={() => { connectWallet(() => { setIsWalletPopupOpen(false); if (pendingAction) { pendingAction(); setPendingAction(null); } }); }} />
     </DiraContext.Provider>
   )
 }

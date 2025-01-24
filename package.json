@@ -11,7 +11,7 @@
   "dependencies": {
     "@cosmjs/cosmwasm-stargate": "^0.32.4",
     "@cosmjs/stargate": "^0.32.4",
-    "@keplr-wallet/types": "^0.12.165",
+    "@keplr-wallet/types": "^0.12.176",
     "@radix-ui/react-dialog": "^1.1.5",
     "@radix-ui/react-slider": "^1.2.2",
     "@radix-ui/react-slot": "^1.1.1",

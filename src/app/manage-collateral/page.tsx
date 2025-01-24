@@ -41,10 +41,11 @@ export default function ManageCollateral() {
   const handleLock = (e: React.FormEvent) => {
     e.preventDefault()
     if (!checkWalletConnection(() => handleLock(e))) return; // Check wallet connection FIRST
+    console.log("handleLock: Wallet connected, proceeding with lock");
 
     const amount = Number.parseFloat(lockAmount)
     if (!isNaN(amount) && amount > 0) {
-      checkWalletConnection(() => lockCollateral(amount))
+      lockCollateral(amount)
       setLockAmount("")
     } // Input validation AFTER wallet check
   }
@@ -52,11 +53,12 @@ export default function ManageCollateral() {
   const handleUnlock = (e: React.FormEvent) => {
     e.preventDefault()
     if (!checkWalletConnection(() => handleUnlock(e))) return; // Check wallet connection FIRST
+    console.log("handleUnlock: Wallet connected, proceeding with unlock");
 
     const amount = Number.parseFloat(unlockAmount)
     // Input validation AFTER wallet check
     if (!isNaN(amount) && amount > 0 && amount <= maxUnlockAmount) {
-      checkWalletConnection(() => unlockCollateral(amount))
+      unlockCollateral(amount)
       setUnlockAmount("")
       setUnlockPercentage(0)
     } // Input validation AFTER wallet check

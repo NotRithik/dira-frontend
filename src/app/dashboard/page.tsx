@@ -1,171 +1,97 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Slider } from '@/components/ui/slider'
-import { debounce } from 'lodash'; // Import lodash debounce
 import { OmPriceChart } from '@/components/om-price-chart'
 import { useDira } from '@/context/DiraContext'
+import { useWallet } from '@/context/WalletContext' // Import useWallet
+import { toast } from 'sonner'
 
-export default function ManageCollateral() {
+const chainId = process.env.NEXT_PUBLIC_MANTRA_CHAIN_ID!
+const cw20ContractAddress = process.env.NEXT_PUBLIC_CW20_DIRA_CONTRACT_ADDRESS!
+
+export default function DashboardPage() { // Changed component name to DashboardPage
   const {
     lockedCollateral,
     mintedDira,
     currentOmPrice,
     mintableHealth,
-    lockCollateral,
-    unlockCollateral,
+    liquidationHealth,
+    collateralDenom,
   } = useDira()
-
-  const [lockAmount, setLockAmount] = useState<string>('')
-  const [unlockAmount, setUnlockAmount] = useState<string>('')
-  const [unlockPercentage, setUnlockPercentage] = useState(0)
-
-  // Instead of using hard-coded 0.8, we use `mintableHealth` to figure out
-  // the minimum collateral needed to back mintedDira. The max unlockable is
-  // anything above that threshold.
-  const minCollateralNeeded = mintedDira > 0
-    ? (mintedDira / currentOmPrice) / mintableHealth
-    : 0
-
-  const maxUnlockAmount = Math.max(0, lockedCollateral - minCollateralNeeded)
-
-  // Debounced state setter for unlockPercentage
-  const debouncedSetUnlockPercentage = useRef(
-    debounce((value) => {
-      setUnlockPercentage(value);
-    }, 150) // 150ms debounce delay
-  ).current;
-
-  useEffect(() => {
-    if (maxUnlockAmount > 0) {
-      setUnlockAmount(((unlockPercentage / 100) * maxUnlockAmount).toFixed(2))
-    } else {
-      setUnlockAmount('0');
-    }
-  }, [unlockPercentage, maxUnlockAmount])
-
-  const handleLock = (e: React.FormEvent) => {
-    e.preventDefault()
-    const amount = parseFloat(lockAmount)
-    if (!isNaN(amount) && amount > 0) {
-      lockCollateral(amount)
-      setLockAmount('')
-    }
-  }
-
-  const handleUnlock = (e: React.FormEvent) => {
-    e.preventDefault()
-    const amount = parseFloat(unlockAmount)
-    if (!isNaN(amount) && amount > 0 && amount <= maxUnlockAmount) {
-      unlockCollateral(amount)
-      setUnlockAmount('')
-      setUnlockPercentage(0)
-    }
-  }
+  const { isConnected, address, disconnectWallet } = useWallet() // Use useWallet hook
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl mb-8">
-        <Card className="bg-gray-800 text-white">
+        {/* OM Price Chart - Left Column */}
+        <div className="md:order-1">
+          <OmPriceChart />
+        </div>
+
+        {/* Wallet Info - Right Column */}
+        <Card className="bg-gray-800 text-white md:order-2">
           <CardHeader>
-            <CardTitle>Lock Collateral</CardTitle>
-            <CardDescription>Lock your OM to mint Dira</CardDescription>
+            <CardTitle>Wallet Status</CardTitle>
+            <CardDescription>
+              Connection and Account Details
+            </CardDescription>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLock}>
-              <div className="mb-4">
-                <label htmlFor="lockAmount" className="block text-sm font-medium text-gray-400 mb-2">
-                  Amount of OM to lock
-                </label>
-                <Input
-                  id="lockAmount"
-                  type="number"
-                  placeholder="Enter amount"
-                  value={lockAmount}
-                  onChange={(e) => setLockAmount(e.target.value)}
-                  className="w-full bg-gray-700 text-white"
-                  required
-                  min="0"
-                  step="0.01"
-                />
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="font-medium">Connection Status:</span>
+              <span className={isConnected ? "text-green-500" : "text-red-500"}>
+                {isConnected ? "Connected" : "Disconnected"}
+              </span>
+            </div>
+            {isConnected && address && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">Wallet Address:</span>
+                </div>
+                <div className="text-sm text-gray-400 break-all">
+                  {address}
+                </div>
+                <div className="flex justify-between space-x-2">
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={disconnectWallet}
+                    className="w-1/2"
+                  >
+                    Disconnect
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="w-1/2"
+                    onClick={() => {
+                      if (window.keplr) {
+                        window.keplr.suggestToken(chainId, cw20ContractAddress)
+                          .then(() => toast.success("Dira token added to Keplr!"))
+                          .catch((error) => {
+                            console.error("Error adding token to Keplr:", error);
+                            toast.error("Failed to add Dira token to Keplr.");
+                          });
+                      } else {
+                        toast.error("Keplr wallet not detected. Please install Keplr extension.");
+                      }
+                    }}
+                  >
+                    Add Dira to Wallet
+                  </Button>
+                </div>
               </div>
-              <Button
-                type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-              >
-                Lock Collateral
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-        <Card className="bg-gray-800 text-white">
-          <CardHeader>
-            <CardTitle>Unlock Collateral</CardTitle>
-            <CardDescription>Unlock your OM</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleUnlock}>
-              <div className="mb-4">
-                <label htmlFor="unlockAmount" className="block text-sm font-medium text-gray-400 mb-2">
-                  Amount of OM to unlock
-                </label>
-                <Input
-                  id="unlockAmount"
-                  type="number"
-                  placeholder="Enter amount"
-                  value={unlockAmount}
-                  onChange={(e) => {
-                    const val = e.target.value
-                    setUnlockAmount(val)
-                    const numVal = parseFloat(val)
-                    if (!isNaN(numVal) && maxUnlockAmount > 0) {
-                      setUnlockPercentage((numVal / maxUnlockAmount) * 100)
-                    } else {
-                      setUnlockPercentage(0)
-                    }
-                  }}
-                  className="w-full bg-gray-700 text-white"
-                  required
-                  min="0"
-                  max={maxUnlockAmount}
-                  step="0.01"
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-400 mb-2">
-                  Percentage to unlock
-                </label>
-                <Slider
-                  value={[unlockPercentage]} // Use debounced function
-                  onValueChange={(value) => setUnlockPercentage(value[0])}
-                  max={100}
-                  step={1}
-                />
-                <span className="text-sm text-gray-400">{unlockPercentage.toFixed(2)}%</span>
-              </div>
-              <p className="text-sm text-gray-400 mb-4">
-                Locked collateral: {lockedCollateral.toFixed(2)} OM
+            )}
+            {!isConnected && (
+              <p className="text-sm text-gray-400">
+                Connect your wallet to see address and manage assets.
               </p>
-              <p className="text-sm text-gray-400 mb-4">
-                Maximum unlockable: {maxUnlockAmount.toFixed(2)} OM
-              </p>
-              <Button
-                type="submit"
-                className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-                disabled={parseFloat(unlockAmount) > maxUnlockAmount}
-              >
-                Unlock Collateral
-              </Button>
-            </form>
+            )}
           </CardContent>
         </Card>
       </div>
-      <div className="w-full max-w-4xl">
-        <OmPriceChart />
-      </div>
+
     </div>
   )
 }
