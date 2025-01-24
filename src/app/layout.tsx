@@ -7,7 +7,7 @@ import { WalletProvider } from '@/context/WalletContext'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
-  title: 'Dira - The ATOM-backed AED Stablecoin',
+  title: 'Dira - The OM-backed AED Stablecoin',
   description: 'Manage your Dira',
 }
 
