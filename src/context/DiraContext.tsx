@@ -237,7 +237,7 @@ export function DiraProvider({ children }: { children: React.ReactNode }) {
     const increaseAllowanceMsg = {
       increase_allowance: {
         spender: contractAddress,
-        amount: new Decimal(amount).toString(),
+        amount: new Decimal(amount).mul(1e6).toString(),
         expires: { never: {} },
       },
     }
