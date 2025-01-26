@@ -1,14 +1,15 @@
-# Dira - Decentralized AED-Pegged Stablecoin
+# Dira Frontend - The OM-backed stablecoin for the AED
 
-Dira is a decentralized, overcollateralized stablecoin solution for AED (United Arab Emirates Dirham), inspired by MakerDAO. Built on the Cosmos ecosystem, Dira allows users to mint AED stablecoins by locking ATOM as collateral, providing a stable on-chain value store and enabling seamless integration with the growing blockchain ecosystem in Dubai and beyond.
+This is the frontend application for Dira, a decentralized, overcollateralized stablecoin solution for AED (United Arab Emirates Dirham), inspired by MakerDAO for USD. Built on the Cosmos ecosystem, Dira allows users to mint AED stablecoins by locking OM as collateral, providing a stable on-chain value store and enabling seamless integration with the growing blockchain ecosystem in Dubai and beyond.
+
+This frontend provides a user-friendly web interface to interact with the Dira smart contract deployed on the Mantra DuKong testnet.
 
 ## Table of Contents
 - [Overview](#overview)
 - [Features](#features)
 - [Getting Started](#getting-started)
-- [Smart Contract](#smart-contract)
-- [Frontend](#frontend)
-- [How It Works](#how-it-works)
+- [Frontend Application](#frontend-application)
+- [How to Use the Dira Frontend](#how-to-use-the-dira-frontend)
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
 - [License](#license)
@@ -17,132 +18,132 @@ Dira is a decentralized, overcollateralized stablecoin solution for AED (United 
 
 ## Overview
 
-Dira addresses the need for localized stablecoins in the Cosmos ecosystem. With the increasing adoption of tokenized real-world assets (RWAs) in Dubai, Dira provides a reliable and decentralized AED-pegged stablecoin, backed by ATOM as collateral.
+Dira addresses the need for localized stablecoins in the Cosmos ecosystem. With the increasing adoption of tokenized real-world assets (RWAs) in Dubai, Dira provides a reliable and decentralized AED-pegged stablecoin, backed by OM as collateral. This frontend application makes it easy for users to interact with the Dira protocol.
 
-Dira will leverage IBC to integrate seamlessly with Cosmos chains, enhancing liquidity and enabling AED-based liquidity pools for cross-border transactions. By leveraging staking and liquidity pool fees, Dira also drives utility and demand for ATOM.
+Dira will leverage IBC to integrate seamlessly with chains in the Cosmos ecosystem and increase liquidity for the AED. Dira-based liquidity pools will also be created to facilitate ForEx transactions. By leveraging staking and liquidity pool fees, Dira also drives utility and demand for OM.
 
 ---
 
 ## Features
 
-- **Decentralized & Overcollateralized**: Dira stablecoins are backed by ATOM, ensuring stability and security.
-- **Cross-Chain Integration**: Dira will leverage IBC to integrate with Neutron, Mantra, and other Cosmos chains.
-- **Liquidity Pools**: Enables AED/USD stablecoin liquidity pools for efficient on-chain currency conversion.
-- **Transparent Governance**: Admin functionalities are accessible only to approved wallets.
+- **Decentralized & Overcollateralized**: Interact with the Dira stablecoin system backed by OM, ensuring stability and security.
+- **Cross-Chain Ready**: Frontend is designed to interact with the Dira smart contract as it expands across the Cosmos ecosystem via IBC.
+- **Manage Collateral**: Lock and unlock OM collateral directly through the web interface.
+- **Mint & Return Dira**: Mint AED-pegged Dira stablecoins and return them to unlock your OM.
+- **User-Friendly Interface**: Intuitive web interface for easy interaction with the Dira protocol.
+- **Wallet Integration**: Seamlessly connect and interact using Keplr Wallet.
 
 ---
 
 ## Getting Started
 
-Follow these steps to get started with Dira:
+To start using the Dira frontend application, follow these steps:
 
-1. **Clone the Repository**
-   ```bash
-   git clone https://github.com/NotRithik/StableDira.git
-   cd StableDira
-   ```
+1. **Install Keplr Wallet**
+   You need to have the [Keplr browser extension](https://www.keplr.app/) installed in your browser. This wallet will allow you to connect to the Mantra DuKong testnet and interact with the Dira smart contract.
 
-2. **Compile the Smart Contract**
-   Ensure you have [Rust](https://www.rust-lang.org/) and `wasm32-unknown-unknown` target installed.
-   ```bash
-   rustup target add wasm32-unknown-unknown
-   cargo build --target wasm32-unknown-unknown --release
-   ```
+2. **Get Testnet OM from Mantra Chain Faucet**
+   To interact with Dira on the testnet, you will need testnet OM tokens. You can obtain these from the Mantra Chain Discord faucet. Join the [Mantra Chain Discord](https://discord.gg/N72A9zkCRZ), verify your account, get the faucet user role, browse channels and look for the faucet channel to request testnet OM.
 
-   Alternatively, you can use the Cosmos optimizer for a production-ready `.wasm` file:
-   ```bash
-   docker run --rm -v "$(pwd)":/code --mount type=volume,source="$(basename "$(pwd)")_cache",target=/target --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry cosmwasm/optimizer:0.16.0
-   ```
+3. **Access the Dira Frontend Application**
+   Navigate to the deployed Dira Frontend application: [Dira Frontend](https://dira-alpha.vercel.app/)
 
-3. **Run Tests**
-   Use `cw-multi-test` to test the smart contract.
-   ```bash
-   cargo test -- --show-output
-   ```
-
-4. **Deploy the Contract**
-   Deploy the compiled `.wasm` file to a Cosmos chain.
+4. **Connect Your Keplr Wallet**
+   Once on the Dira Frontend webpage, click the "Connect Keplr Wallet" button in the top right corner. Follow the prompts in your Keplr Wallet extension to connect to the application and the Mantra DuKong testnet.
 
 ---
 
-## Smart Contract
+## Frontend Application
 
-The Dira smart contract is written in Rust using CosmWasm.
+This web interface is your gateway to interacting with the Dira protocol on the Mantra DuKong testnet.
 
-- **State Management**:
-  - Collateral amounts, minted stablecoins, and admin addresses are stored securely on-chain.
-  - Supports liquidations when collateral health drops below the threshold.
+Currently, the following features are implemented and accessible through the frontend:
 
-- **Query Functions**:
-  - Public query endpoints provide transparent access to all contract states, including locked collateral, minted Dira, collateral prices, and admin addresses.
+- **Lock Collateral**:  On the "Manage Locked Collateral" page, you can lock your OM tokens as collateral. Enter the amount of OM you wish to lock and click "Lock Collateral." You will be prompted to approve the transaction in your Keplr Wallet.
+- **Mint/Return Dira**: On the "Mint or Return Dira" page, you can mint Dira stablecoins based on your locked OM collateral or return minted Dira to unlock your OM. Use the intuitive sliders or input fields to specify the amount of Dira to mint or return, and then click "Mint Dira" or "Return Dira" respectively. Approve the transaction in Keplr Wallet when prompted.
+- **Dashboard**: The "Dashboard" provides an overview of your wallet status, connection information, and price charts for OM and Dira.
 
-The smart contract repository: [Dira Smart Contract](https://github.com/NotRithik/StableDira).
+Planned features that will be implemented in the frontend soon:
 
----
-
-## Frontend
-
-A web interface is under development for user interaction with the Dira ecosystem.
-
-- **Lock Collateral**: Users can lock ATOM to mint Dira stablecoins.
-- **Mint/Burn Stablecoins**: Intuitive interface to manage minted stablecoins.
-- **Liquidation**: View and liquidate unhealthy stablecoins.
 - **Collateral Auction**: Participate in Collateral Auctions to buy liquidated assets.
-
-Live Preview: [Dira Frontend](https://xatrknaz5h7ejdov.vercel.app/)
-Frontend Source Code: [Dira Frontend Repository](https://github.com/NotRithik/dira-frontend)
+- **Oracle Price Feed**: View collateral token's price fetched directly from oracles on-chain within the UI.
+- **Governance Features**: Interface to interact with governance functionalities when they are implemented in the smart contract.
+- **Fee Information**: Display and incorporate stability fees when they are introduced.
 
 ---
 
-## How It Works
+## How to Use the Dira Frontend
 
-1. **Lock Collateral**:
-   Users lock ATOM as collateral in the smart contract.
+Here's a step-by-step guide to using the Dira Frontend:
 
-2. **Mint Stablecoins**:
-   The system calculates the user's collateral health, allowing them to mint stablecoins proportionally.
+1. **Connect Keplr Wallet**:
+   Click the "Connect Keplr Wallet" button in the top right corner of the webpage and approve the connection in your Keplr Wallet extension.
 
-3. **Burn Stablecoins**:
-   Users burn Dira to unlock collateral.
+2. **Ensure You Have Testnet OM**:
+   Verify that you have testnet OM tokens in your Keplr Wallet for the connected Mantra DuKong testnet. If not, obtain them from the Mantra Chain Discord faucet (see "Getting Started" section).
 
-4. **Liquidations**:
-   If a user's collateral health drops below the threshold, their collateral is liquidated by other users for rewards.
+3. **Lock OM Collateral**:
+   Navigate to the "Manage Locked Collateral" page using the navigation menu.
+   - Enter the amount of OM you wish to lock in the "Amount of OM to lock" input field.
+   - Click the "Lock Collateral" button.
+   - Approve the transaction in your Keplr Wallet when prompted.
+
+4. **Mint Dira Stablecoins**:
+   Navigate to the "Mint or Return Dira" page.
+   - Use the "Amount of Dira to mint" input or the slider to specify the amount of Dira you want to mint, based on your available mintable Dira.
+   - Click the "Mint Dira" button.
+   - Approve the transaction in your Keplr Wallet.
+
+5. **Return Dira and Unlock Collateral**:
+   On the "Mint or Return Dira" page:
+   - Use the "Amount of Dira to return" input or slider to specify the amount of Dira you want to return.
+   - Click the "Return Dira" button.
+   - Approve the transaction in your Keplr Wallet.
+   - To unlock your OM collateral, navigate to the "Manage Locked Collateral" page, and use the "Unlock Collateral" section to unlock a desired amount of OM.
+
+6. **Add Dira Token to Keplr**:
+   After successfully minting Dira, you can add the Dira token to your Keplr Wallet for easier tracking.
+   - Click on the "Dashboard" button in the navigation menu.
+   - In the "Wallet Status" card, click the "Add Dira to Wallet" button.
+   - Approve the token suggestion in your Keplr Wallet.
 
 ---
 
 ## Roadmap
 
 - **Phase 1**:
-  - Launch Dira on testnet.
-  - Develop user-friendly web interface.
-  - Conduct security audits.
+  - Launch Dira on testnet with a functional frontend.
+  - User testing and feedback collection.
+  - Security audits of both smart contract and frontend.
 
 - **Phase 2**:
-  - Integrate with Neutron and Mantra via IBC.
-  - Establish liquidity pools for AED/USD stablecoins.
+  - Enhance frontend UI/UX based on user feedback.
+  - Implement frontend support for IBC integrations with Neutron and Mantra.
+  - Develop UI for AED/USD liquidity pool interactions.
 
 - **Phase 3**:
-  - Expand to other regional stablecoins (e.g., SGD).
-  - Develop a multi-currency stablecoin DEX.
+  - Expand frontend to support other regional stablecoins (e.g., SGD).
+  - Develop UI for multi-currency stablecoin DEX features.
+  - Implement governance feature interactions in the frontend.
 
 ---
 
 ## Contributing
 
-Contributions are welcome!
+Contributions to the Dira frontend are welcome!
 
-1. Fork the repository.
+1. Fork the [Dira Frontend Repository](https://github.com/NotRithik/dira-frontend).
 2. Create a feature branch.
 3. Submit a pull request with a clear description of the changes.
 
-For major changes, please open an issue first to discuss your ideas.
+For major changes, please open an issue first in the frontend repository to discuss your ideas.
 
 ---
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file in the repository for details.
 
 ---
 
-**Dira - The ATOM-backed stablecoin for the Emirati Dirham. Secure, stable, and decentralized.**
+**Dira Frontend - Your interface to the OM-backed stablecoin for the Emirati Dirham. Secure, stable, and decentralized.**
