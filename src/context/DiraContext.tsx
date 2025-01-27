@@ -7,7 +7,6 @@ import { Decimal } from "decimal.js"
 import type { ExecuteMsg } from "@/types/ExecuteMsg"
 import { toast } from "sonner"
 import { WalletConnectionPopup } from "@/components/WalletConnectionPopup"
-import { QueryResponseMsg } from "@/types/QueryResponseMsg"
 
 type Funds = {
     amount: string;

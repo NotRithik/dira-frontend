@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { OmPriceChart } from '@/components/om-price-chart'
 import { useDira } from '@/context/DiraContext'
-import { toast } from 'sonner'
 
 export default function ManageDira() { // Changed component name to match request
   const { lockedCollateral, mintedDira, currentOmPrice, mintableHealth, mintDira, checkWalletConnection } = useDira() // Added checkWalletConnection
