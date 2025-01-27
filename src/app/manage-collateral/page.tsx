@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Slider } from "@/components/ui/slider"
 import { OmPriceChart } from "@/components/om-price-chart"
 import { useDira } from "@/context/DiraContext"
+import { toast } from "sonner"
 
 export default function ManageCollateral() {
   const {
@@ -26,13 +27,13 @@ export default function ManageCollateral() {
   // Instead of using hard-coded 0.8, we use `mintableHealth` to figure out
   // the minimum collateral needed to back mintedDira. The max unlockable is
   // anything above that threshold.
-  const minCollateralNeeded = mintedDira > 0 ? mintedDira / currentOmPrice / mintableHealth : 0
+  const minCollateralNeeded = mintedDira > 0 ? (mintedDira * mintableHealth) / currentOmPrice : 0;
 
   const maxUnlockAmount = Math.max(0, lockedCollateral - minCollateralNeeded)
 
   useEffect(() => {
     if (maxUnlockAmount > 0) {
-      setUnlockAmount(((unlockPercentage / 100) * maxUnlockAmount).toFixed(2))
+      setUnlockAmount(((unlockPercentage / 100) * maxUnlockAmount).toString())
     } else {
       setUnlockAmount("0")
     }
@@ -52,16 +53,18 @@ export default function ManageCollateral() {
 
   const handleUnlock = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!checkWalletConnection(() => handleUnlock(e))) return; // Check wallet connection FIRST
-    console.log("handleUnlock: Wallet connected, proceeding with unlock");
-
+    if (!checkWalletConnection(() => handleUnlock(e))) return;
+    console.log("ManageCollateral handleUnlock - Attempting to unlock:", { unlockAmount, maxUnlockAmount }); // ADDED LOG
     const amount = Number.parseFloat(unlockAmount)
     // Input validation AFTER wallet check
     if (!isNaN(amount) && amount > 0 && amount <= maxUnlockAmount) {
       unlockCollateral(amount)
       setUnlockAmount("")
       setUnlockPercentage(0)
-    } // Input validation AFTER wallet check
+    } else {
+      console.log("ManageCollateral handleUnlock - Unlock amount invalid:", { amount, maxUnlockAmount, maxUnlockable: maxUnlockAmount }); // ADDED LOG
+      toast.error("Invalid unlock amount. Please check max unlockable collateral.");
+    }
   }
 
   return (
@@ -80,7 +83,7 @@ export default function ManageCollateral() {
                 </label>
                 <Input
                   id="lockAmount"
-                  type="number"
+                  type="text"
                   placeholder="Enter amount"
                   value={lockAmount}
                   onChange={(e) => setLockAmount(e.target.value)}
@@ -112,7 +115,7 @@ export default function ManageCollateral() {
                 </label>
                 <Input
                   id="unlockAmount"
-                  type="number"
+                  type="text"
                   placeholder="Enter amount"
                   value={unlockAmount}
                   onChange={(e) => {

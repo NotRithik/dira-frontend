@@ -7,6 +7,7 @@ import { Decimal } from "decimal.js"
 import type { ExecuteMsg } from "@/types/ExecuteMsg"
 import { toast } from "sonner"
 import { WalletConnectionPopup } from "@/components/WalletConnectionPopup"
+import { QueryResponseMsg } from "@/types/QueryResponseMsg"
 
 type Funds = {
     amount: string;
@@ -57,32 +58,40 @@ export function DiraProvider({ children }: { children: React.ReactNode }) {
       const price = await cosmWasmClient.queryContractSmart(contractAddress, {
         query_collateral_price: {},
       })
-      setCurrentOmPrice(new Decimal(price.collateral_price).toNumber())
+      setCurrentOmPrice(new Decimal(price.collateral_price).toNumber()) // Direct access
+      console.log("DiraContext fetchData - currentOmPrice:", price);
 
       const locked = await cosmWasmClient.queryContractSmart(contractAddress, {
         query_locked_collateral: { wallet_address_to_query: address },
       })
-      setLockedCollateral(new Decimal(locked.collateral_locked).toNumber())
+      setLockedCollateral(new Decimal(locked.collateral_locked).toNumber()) // Direct access
+      console.log("DiraContext fetchData - lockedCollateral:", locked);
 
       const minted = await cosmWasmClient.queryContractSmart(contractAddress, {
         query_minted_dira: { wallet_address_to_query: address },
       })
-      setMintedDira(new Decimal(minted.dira_minted).toNumber())
+      setMintedDira(new Decimal(minted.dira_minted).toNumber()) // Direct access
+      console.log("DiraContext fetchData - mintedDira:", minted);
 
       const liqHealth = await cosmWasmClient.queryContractSmart(contractAddress, {
         query_liquidation_health: {},
       })
-      setLiquidationHealth(new Decimal(liqHealth.liquidation_health).toNumber())
+      setLiquidationHealth(new Decimal(liqHealth.liquidation_health).toNumber()) // Direct access
+      console.log("DiraContext fetchData - liquidationHealth:", liqHealth);
+
 
       const mintHealth = await cosmWasmClient.queryContractSmart(contractAddress, {
         query_mintable_health: {},
       })
-      setMintableHealth(new Decimal(mintHealth.mintable_health).toNumber())
+      setMintableHealth(new Decimal(mintHealth.mintable_health).toNumber()) // Direct access
+      console.log("DiraContext fetchData - mintableHealth:", mintHealth);
+
 
       const denom = await cosmWasmClient.queryContractSmart(contractAddress, {
         query_collateral_token_denom: {},
       })
-      setCollateralDenom(denom.collateral_token_denom)
+      setCollateralDenom(denom.collateral_token_denom) // Direct access
+      console.log("DiraContext fetchData - collateralDenom:", denom);
     } catch (error) {
       console.error("Error fetching data:", error)
       toast.error("Failed to fetch contract data.")

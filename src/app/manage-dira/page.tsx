@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Slider } from '@/components/ui/slider'
 import { OmPriceChart } from '@/components/om-price-chart'
 import { useDira } from '@/context/DiraContext'
+import { toast } from 'sonner'
 
 export default function ManageDira() {
   const {
@@ -26,32 +27,34 @@ export default function ManageDira() {
 
 
   // Replace 0.8 with `mintableHealth`.
-  const maxMintAmount = (lockedCollateral * currentOmPrice * mintableHealth) - mintedDira
+  const maxMintAmount = (lockedCollateral * currentOmPrice) / mintableHealth - mintedDira;
 
   useEffect(() => {
-    if (maxMintAmount > 0) {
-      setMintAmount(((mintPercentage / 100) * maxMintAmount).toFixed(2))
-    } else {
-      setMintAmount('0')
-    }
-  }, [mintPercentage, maxMintAmount])
-
-  useEffect(() => {
-    setReturnAmount(((returnPercentage / 100) * mintedDira).toFixed(2))
+    const calculatedReturnAmount = ((returnPercentage / 100) * mintedDira).toString(); // Calculate first for logging
+    console.log("ManageDira useEffect (returnAmount update):", {
+      returnPercentage,
+      mintedDira,
+      calculatedReturnAmount
+    });
+    setReturnAmount(calculatedReturnAmount);
   }, [returnPercentage, mintedDira])
 
   const handleMint = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!checkWalletConnection(() => handleMint(e))) return; // Check wallet connection FIRST
+    e.preventDefault();
+    if (!checkWalletConnection(() => handleMint(e))) return;
 
-    if (!checkWalletConnection(() => handleMint(e))) return; // Wallet check first
-    const amount = parseFloat(mintAmount)
-    if (amount > 0 && amount <= maxMintAmount) { // Input validation AFTER wallet check
-      mintDira(amount)
-      setMintAmount('')
-      setMintPercentage(0)
+    if (!checkWalletConnection(() => handleMint(e))) return;
+    const amount = parseFloat(mintAmount);
+    console.log("ManageDira handleMint - Attempting to mint:", { amount, maxMintAmount }); // ADDED LOG
+    if (amount > 0 && amount <= maxMintAmount) {
+      mintDira(amount);
+      setMintAmount('');
+      setMintPercentage(0);
+    } else {
+      console.log("ManageDira handleMint - Mint amount invalid:", { amount, maxMintAmount }); // ADDED LOG
+      toast.error("Invalid mint amount. Please check max mintable Dira.");
     }
-  }
+  };
 
   const handleReturn = (e: React.FormEvent) => {
     e.preventDefault()
@@ -87,7 +90,7 @@ export default function ManageDira() {
                 </label>
                 <Input
                   id="mintAmount"
-                  type="number"
+                  type="text"
                   placeholder="Enter amount"
                   value={mintAmount}
                   onChange={(e) => {
@@ -121,7 +124,7 @@ export default function ManageDira() {
                 <span className="text-sm text-gray-400">{mintPercentage.toFixed(2)}%</span>
               </div>
               <p className="text-sm text-gray-400 mb-4">
-                Max mintable Dira: {maxMintAmount > 0 ? maxMintAmount.toFixed(2) : '0'}
+                Max mintable Dira: {maxMintAmount > 0 ? maxMintAmount.toString() : '0'}
               </p>
               <Button
                 type="submit"
@@ -145,7 +148,7 @@ export default function ManageDira() {
                 </label>
                 <Input
                   id="returnAmount"
-                  type="number"
+                  type="text"
                   placeholder="Enter amount"
                   value={returnAmount}
                   onChange={(e) => {
@@ -179,7 +182,7 @@ export default function ManageDira() {
                 <span className="text-sm text-gray-400">{returnPercentage.toFixed(2)}%</span>
               </div>
               <p className="text-sm text-gray-400 mb-4">
-                Minted Dira: {mintedDira.toFixed(2)}
+                Minted Dira: {mintedDira.toString()}
               </p>
               <Button
                 type="submit"

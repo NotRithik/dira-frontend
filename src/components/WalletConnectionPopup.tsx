@@ -20,7 +20,6 @@ export const WalletConnectionPopup: React.FC<WalletConnectionPopupProps> = ({
   onConnect,
 }) => {
   if (!isOpen) {
-    console.log("WalletConnectionPopup: isOpen is false, returning null"); // ADDED LOG
     return null;
   }
 
