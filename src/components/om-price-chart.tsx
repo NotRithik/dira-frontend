@@ -8,9 +8,7 @@ import { useDira } from "@/context/DiraContext"
 export function OmPriceChart() { // Removed currentOmPrice from destructuring
   const {} = useDira() // Destructure even if empty to use the context
 
-  // The data is still hardcoded for historical OM price, but we multiply each
-  // entry by 3.67 to simulate an AED conversion. The actual price of the last
-  // point is fetched from the contract and displayed in other UI places.
+  // The data is still hardcoded for historical OM price
   const formattedData = omPriceData.map((item) => ({
     ...item,
     price: item.price.toFixed(2),
@@ -71,7 +69,7 @@ export function OmPriceChart() { // Removed currentOmPrice from destructuring
                 dot={false}
               />
               <XAxis dataKey="date" hide />
-              <YAxis />
+              <YAxis domain={[-5, 20]} />
             </LineChart>
           </ResponsiveContainer>
         </div>
