@@ -6,13 +6,14 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { OmPriceChart } from '@/components/om-price-chart'
 import { useDira } from '@/context/DiraContext'
+import { toast } from 'sonner'
 
 export default function ManageDira() { // Changed component name to match request
   const { lockedCollateral, mintedDira, currentOmPrice, mintableHealth, mintDira, checkWalletConnection } = useDira() // Added checkWalletConnection
   const [mintAmount, setMintAmount] = useState('')
 
   // Replacing the 0.8 factor with `mintableHealth`
-  const maxMintAmount = (lockedCollateral * currentOmPrice * mintableHealth) - mintedDira
+  const maxMintAmount = (lockedCollateral * currentOmPrice) / mintableHealth - mintedDira
 
   const handleMint = (e: React.FormEvent) => {
     e.preventDefault()
@@ -44,7 +45,7 @@ export default function ManageDira() { // Changed component name to match reques
                 Current OM price: {currentOmPrice.toFixed(2)} Dira
               </p>
               <p className="text-sm text-gray-400">
-                Max mintable Dira: {maxMintAmount > 0 ? maxMintAmount.toFixed(2) : '0'}
+                Max mintable Dira: {maxMintAmount > 0 ? maxMintAmount.toString() : '0'}
               </p>
               <p className="text-sm text-gray-400">
                 Already minted Dira: {mintedDira.toFixed(2)}
@@ -56,13 +57,16 @@ export default function ManageDira() { // Changed component name to match reques
               </label>
               <Input
                 id="mintAmount"
-                type="number"
+                type="text"
                 placeholder="Enter amount"
                 value={mintAmount}
                 onChange={(e) => {
-                  const value = e.target.value
-                  if (Number(value) <= maxMintAmount) {
-                    setMintAmount(value)
+                  const value = e.target.value;
+                  if (/^\d*\.?\d*$/.test(value)) { // Allow only digits and one decimal point
+                    const numValue = Number(value);
+                    if (!isNaN(numValue) && numValue >= 0 && numValue <= maxMintAmount) { // Validate min, max and isNumber
+                      setMintAmount(value);
+                    }
                   }
                 }}
                 className="w-full bg-gray-700 text-white"

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Slider } from "@/components/ui/slider"
 import { OmPriceChart } from "@/components/om-price-chart"
-import { useDira } from "@/context/DiraContext"
+import { useDira } from '@/context/DiraContext'
 import { toast } from "sonner"
 
 export default function ManageCollateral() {

@@ -9,16 +9,17 @@ import { useDira } from '@/context/DiraContext'
 
 export default function ManageCollateral() {
   const { lockedCollateral, /*currentOmPrice,*/ lockCollateral, unlockCollateral, checkWalletConnection } = useDira() // Added checkWalletConnection
-  const [lockAmount, setLockAmount] = useState(0)
-  const [unlockAmount, setUnlockAmount] = useState(0)
+  const [lockAmount, setLockAmount] = useState('')
+  const [unlockAmount, setUnlockAmount] = useState('')
 
   const handleLock = (e: React.FormEvent) => {
     e.preventDefault()
     if (!checkWalletConnection(() => handleLock(e))) return; // Wallet check FIRST
 
-    if (lockAmount > 0) {
-      lockCollateral(lockAmount)
-      setLockAmount(0)
+    const amount = Number(lockAmount)
+    if (amount > 0) {
+      lockCollateral(amount)
+      setLockAmount('')
     }
   }
 
@@ -26,9 +27,10 @@ export default function ManageCollateral() {
     e.preventDefault()
     if (!checkWalletConnection(() => handleUnlock(e))) return; // Wallet check FIRST
 
-    if (unlockAmount > 0 && unlockAmount <= lockedCollateral) {
-      unlockCollateral(unlockAmount)
-      setUnlockAmount(0)
+    const amount = Number(unlockAmount)
+    if (amount > 0 && amount <= lockedCollateral) {
+      unlockCollateral(amount)
+      setUnlockAmount('')
     }
   }
 
@@ -48,10 +50,18 @@ export default function ManageCollateral() {
                 </label>
                 <Input
                   id="lockAmount"
-                  type="number"
+                  type="text" // Changed to text
                   placeholder="Enter amount"
-                  value={lockAmount}
-                  onChange={(e) => setLockAmount(Number(e.target.value))}
+                  value={lockAmount} // Value is still state variable
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (/^\d*\.?\d*$/.test(value)) { // Allow only digits and one decimal point
+                      const numValue = Number(value);
+                      if (isNaN(numValue) || numValue >= 0) { // Ensure it's a valid non-negative number
+                        setLockAmount(value);
+                      }
+                    }
+                  }}
                   className="w-full bg-gray-700 text-white"
                   required
                   min="0"
@@ -80,10 +90,18 @@ export default function ManageCollateral() {
                 </label>
                 <Input
                   id="unlockAmount"
-                  type="number"
+                  type="text" // Changed to text
                   placeholder="Enter amount"
-                  value={unlockAmount}
-                  onChange={(e) => setUnlockAmount(Number(e.target.value))}
+                  value={unlockAmount} // Value is still state variable
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (/^\d*\.?\d*$/.test(value)) { // Allow only digits and one decimal point
+                      const numValue = Number(value);
+                      if (!isNaN(numValue) && numValue >= 0 && numValue <= lockedCollateral) { // Validate min, max and isNumber
+                        setUnlockAmount(value);
+                      }
+                    }
+                  }}
                   className="w-full bg-gray-700 text-white"
                   required
                   min="0"

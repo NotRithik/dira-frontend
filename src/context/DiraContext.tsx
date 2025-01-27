@@ -59,39 +59,33 @@ export function DiraProvider({ children }: { children: React.ReactNode }) {
         query_collateral_price: {},
       })
       setCurrentOmPrice(new Decimal(price.collateral_price).toNumber()) // Direct access
-      console.log("DiraContext fetchData - currentOmPrice:", price);
 
       const locked = await cosmWasmClient.queryContractSmart(contractAddress, {
         query_locked_collateral: { wallet_address_to_query: address },
       })
       setLockedCollateral(new Decimal(locked.collateral_locked).toNumber()) // Direct access
-      console.log("DiraContext fetchData - lockedCollateral:", locked);
 
       const minted = await cosmWasmClient.queryContractSmart(contractAddress, {
         query_minted_dira: { wallet_address_to_query: address },
       })
       setMintedDira(new Decimal(minted.dira_minted).toNumber()) // Direct access
-      console.log("DiraContext fetchData - mintedDira:", minted);
 
       const liqHealth = await cosmWasmClient.queryContractSmart(contractAddress, {
         query_liquidation_health: {},
       })
       setLiquidationHealth(new Decimal(liqHealth.liquidation_health).toNumber()) // Direct access
-      console.log("DiraContext fetchData - liquidationHealth:", liqHealth);
 
 
       const mintHealth = await cosmWasmClient.queryContractSmart(contractAddress, {
         query_mintable_health: {},
       })
       setMintableHealth(new Decimal(mintHealth.mintable_health).toNumber()) // Direct access
-      console.log("DiraContext fetchData - mintableHealth:", mintHealth);
 
 
       const denom = await cosmWasmClient.queryContractSmart(contractAddress, {
         query_collateral_token_denom: {},
       })
       setCollateralDenom(denom.collateral_token_denom) // Direct access
-      console.log("DiraContext fetchData - collateralDenom:", denom);
     } catch (error) {
       console.error("Error fetching data:", error)
       toast.error("Failed to fetch contract data.")
@@ -102,7 +96,7 @@ export function DiraProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     fetchData()
-    const intervalId = setInterval(fetchData, 1000)
+    const intervalId = setInterval(fetchData, 2500)
     return () => clearInterval(intervalId)
   }, [fetchData])
 
@@ -161,26 +155,17 @@ export function DiraProvider({ children }: { children: React.ReactNode }) {
   )
 
   const handleConnectWalletPopupConnect = useCallback(() => {
-    console.log("DiraContext: handleConnectWalletPopupConnect: called");
     setIsWalletPopupOpen(false);
-    console.log("DiraContext: handleConnectWalletPopupConnect: setIsWalletPopupOpen(false) called immediately");
     setIsConnectingWallet(true); // SET isConnectingWallet to true HERE
-    console.log("DiraContext: handleConnectWalletPopupConnect: setIsConnectingWallet(true) called");
     connectWallet(() => {
-      console.log("DiraContext: handleConnectWalletPopupConnect: connectWallet callback (onConnectSuccess) executed");
       setIsConnectingWallet(false); // SET isConnectingWallet to false in callback
-      console.log("DiraContext: handleConnectWalletPopupConnect: setIsConnectingWallet(false) called in callback");
       if (pendingActionRef.current) {
-        console.log("DiraContext: handleConnectWalletPopupConnect: pendingActionRef.current exists, executing it");
         pendingActionRef.current();
         pendingActionRef.current = null;
-        console.log("DiraContext: handleConnectWalletPopupConnect: pendingActionRef.current executed and cleared");
       } else {
-        console.log("DiraContext: handleConnectWalletPopupConnect: No pending action to execute");
       }
     }, () => { // ADDED error callback to also set isConnectingWallet to false on failure
       setIsConnectingWallet(false);
-      console.log("DiraContext: handleConnectWalletPopupConnect: setIsConnectingWallet(false) called in error callback");
     });
   }, [connectWallet, setIsWalletPopupOpen, pendingActionRef, setIsConnectingWallet]); // ADDED setIsConnectingWallet to dependencies
 

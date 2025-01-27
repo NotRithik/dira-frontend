@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Slider } from '@/components/ui/slider'
 import { OmPriceChart } from '@/components/om-price-chart'
 import { useDira } from '@/context/DiraContext'
-import { toast } from 'sonner'
+import { toast } from "sonner"
 
 export default function ManageDira() {
   const {
@@ -28,6 +28,24 @@ export default function ManageDira() {
 
   // Replace 0.8 with `mintableHealth`.
   const maxMintAmount = (lockedCollateral * currentOmPrice) / mintableHealth - mintedDira;
+
+    useEffect(() => {
+    const calculatedMintAmount = ((mintPercentage / 100) * maxMintAmount).toString();
+    console.log("ManageDira useEffect (mintAmount update):", { // ADDED LOG
+      mintPercentage,
+      maxMintAmount,
+      calculatedMintAmount
+    });
+    setMintAmount(calculatedMintAmount);
+  }, [mintPercentage, maxMintAmount]); // Keep maxMintAmount in dependency array but ensure calculation is correct
+
+  useEffect(() => {
+    if (maxMintAmount > 0) {
+      setMintAmount(((mintPercentage / 100) * maxMintAmount).toString())
+    } else {
+      setMintAmount('0')
+    }
+  }, [mintPercentage, maxMintAmount])
 
   useEffect(() => {
     const calculatedReturnAmount = ((returnPercentage / 100) * mintedDira).toString(); // Calculate first for logging
@@ -94,13 +112,13 @@ export default function ManageDira() {
                   placeholder="Enter amount"
                   value={mintAmount}
                   onChange={(e) => {
-                    const value = e.target.value
-                    setMintAmount(value)
-                    const numValue = parseFloat(value)
-                    if (!isNaN(numValue) && maxMintAmount > 0) {
-                      setMintPercentage((numValue / maxMintAmount) * 100)
-                    } else {
-                      setMintPercentage(0)
+                    const value = e.target.value;
+                    if (/^\d*\.?\d*$/.test(value)) { // Allow only digits and one decimal point
+                      const numValue = parseFloat(value);
+                      if (!isNaN(numValue) && numValue >= 0 && numValue <= maxMintAmount) {
+                        setMintAmount(value);
+                        setMintPercentage((numValue / maxMintAmount) * 100);
+                      }
                     }
                   }}
                   className="w-full bg-gray-700 text-white"
@@ -152,13 +170,13 @@ export default function ManageDira() {
                   placeholder="Enter amount"
                   value={returnAmount}
                   onChange={(e) => {
-                    const value = e.target.value
-                    setReturnAmount(value)
-                    const numValue = parseFloat(value)
-                    if (!isNaN(numValue) && mintedDira > 0) {
-                      setReturnPercentage((numValue / mintedDira) * 100)
-                    } else {
-                      setReturnPercentage(0)
+                    const value = e.target.value;
+                    if (/^\d*\.?\d*$/.test(value)) { // Allow only digits and one decimal point
+                      const numValue = parseFloat(value);
+                      if (!isNaN(numValue) && numValue >= 0 && numValue <= mintedDira) {
+                        setReturnAmount(value);
+                        setReturnPercentage((numValue / mintedDira) * 100);
+                      }
                     }
                   }}
                   className="w-full bg-gray-700 text-white"
