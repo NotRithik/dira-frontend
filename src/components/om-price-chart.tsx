@@ -13,7 +13,7 @@ export function OmPriceChart() { // Removed currentOmPrice from destructuring
   // point is fetched from the contract and displayed in other UI places.
   const formattedData = omPriceData.map((item) => ({
     ...item,
-    price: (item.price * 3.67).toFixed(2),
+    price: item.price.toFixed(2),
   }))
 
   return (
