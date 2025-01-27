@@ -27,9 +27,9 @@ export default function ManageDira() {
 
 
   // Replace 0.8 with `mintableHealth`.
-  const maxMintAmount = (lockedCollateral * currentOmPrice) / mintableHealth - mintedDira;
+  const maxMintAmount = ((lockedCollateral * currentOmPrice) / mintableHealth - mintedDira) ? ((lockedCollateral * currentOmPrice) / mintableHealth - mintedDira) : 0;
 
-    useEffect(() => {
+  useEffect(() => {
     const calculatedMintAmount = ((mintPercentage / 100) * maxMintAmount).toString();
     console.log("ManageDira useEffect (mintAmount update):", { // ADDED LOG
       mintPercentage,
