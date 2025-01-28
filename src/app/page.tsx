@@ -35,7 +35,7 @@ export default function Home() {
 
         <div className="text-right mb-16">
           <h2 className="ml-auto w-2/3 text-3xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">
-            Unlocking Dubai's Digital Economy
+            Unlocking Dubai&apos;s Digital Economy
           </h2>
           <p className="ml-auto w-2/3 text-xl" >
             Dubai is rapidly becoming a global hub for Real World Asset tokenization and digital innovation. Dira is designed to be a foundational layer for this growth, providing essential on-chain liquidity for AED and bridging the gap between traditional markets and the decentralized future. Join us in building the financial frontier of Dubai.
