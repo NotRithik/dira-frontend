@@ -214,7 +214,7 @@ export function DiraProvider({ children }: { children: React.ReactNode }) {
     }
     const message: ExecuteMsg = {
       mint_dira: {
-        dira_to_mint: new Decimal(amount).toString(),
+        dira_to_mint: new Decimal(amount).toFixed(6).toString(),
       },
     }
     executeContract(message)
@@ -230,14 +230,14 @@ export function DiraProvider({ children }: { children: React.ReactNode }) {
     const increaseAllowanceMsg = {
       increase_allowance: {
         spender: contractAddress,
-        amount: new Decimal(amount).mul(1e6).toString(),
+        amount: new Decimal(amount).mul(1e6).toFixed(0).toString(),
         expires: { never: {} },
       },
     }
 
     const burnDiraMsg: ExecuteMsg = {
       burn_dira: {
-        dira_to_burn: new Decimal(amount).toString(),
+        dira_to_burn: new Decimal(amount).toFixed(6).toString(),
       },
     }
 
